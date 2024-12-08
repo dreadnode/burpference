@@ -1,0 +1,7 @@
+{
+  "api_type": "ollama",
+  "format": "json",
+  "stream": false,
+  "host": "http://localhost:11434/api/generate",
+  "model": "rfc/whiterabbitneo"
+}

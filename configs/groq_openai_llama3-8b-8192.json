@@ -1,0 +1,12 @@
+{
+  "api_type": "groq-openai-stream",
+  "headers": {
+    "x-api-key": "{$GROQ_API_KEY}",
+    "Content-Type": "application/json"
+  },
+  "stream": true,
+  "max_tokens": 1020,
+  "host": "https://api.groq.com/openai/v1/chat/completions",
+  "model": "llama3-8b-8192",
+  "temperature": 0.1
+}

@@ -1,0 +1,8 @@
+{
+  "api_type": "ollama",
+  "format": "json",
+  "api_type": "ollama",
+  "stream": false,
+  "host": "http://localhost:11434/api/generate",
+  "model": "llama3.2"
+}

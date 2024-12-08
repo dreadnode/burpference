@@ -1,0 +1,9 @@
+// ensure to follow steps guidance here as a pre-req https://huggingface.co/docs/hub/en/ollama
+{
+  "api_type": "ollama",
+  "stream": false,
+  "host": "http://localhost:11434/api/chat",
+  "model": "hf.co/{username}/{repository}", // ensure to replace these variables
+  "quantization": "Q4_K_M" // optional
+  "max_input_size": 32000 // recommended to adjust based on model loaded
+}

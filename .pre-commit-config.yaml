@@ -1,0 +1,67 @@
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b #v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=36000]
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-json
+      - id: check-yaml
+      - id: trailing-whitespace
+
+  # Github actions
+  - repo: https://github.com/rhysd/actionlint
+    rev: 5db9d9cde2f3deb5035dea3e45f0a9fff2f29448 #v1.7.4
+    hooks:
+      - id: actionlint
+        name: Check Github Actions
+
+  # Secrets detection
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: 01886c8a910c64595c47f186ca1ffc0b77fa5458 #v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: Detect secrets
+        args:
+          - '--baseline'
+          - '.secrets.baseline'
+          - '--exclude-files'
+          - 'components/api/migrations/*'
+          - '--exclude-files'
+          - 'components/api/app/assets/*'
+          - '--exclude-files'
+          - '\.sops\.yaml$'
+          - '--exclude-files'
+          - 'secrets\.enc\.yaml$'
+          - '--exclude-files'
+          - 'components/strikes/*'
+
+  # Python linting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: 8b76f04e7e5a9cd259e9d1db7799599355f97cdf # v0.8.2
+    hooks:
+      # Run the linter.
+      - id: ruff
+      # Run the formatter.
+      - id: ruff-format
+
+  # Python code security
+  - repo: https://github.com/PyCQA/bandit
+    rev: 8fd258abbac759d62863779f946d6a88e8eabb0f #1.8.0
+    hooks:
+      - id: bandit
+        name: Code security checks
+        args: ["-c", "pyproject.toml"]
+        additional_dependencies: ["bandit[toml]"]
+
+  - repo: local
+    hooks:
+      # Ensure our GH actions are pinned to a specific hash
+      - id: check-github-actions
+        name: Check GitHub Actions for Pinned Dependencies
+        entry: python .scripts/check_pinned_hash_dependencies.py
+        language: python
+        files: \.github/.*\.yml$

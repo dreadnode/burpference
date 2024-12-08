@@ -1,0 +1,11 @@
+{
+  "api_type": "anthropic",
+  "headers": {
+    "x-api-key": "{$ANTHROPIC_API_KEY}",
+    "Content-Type": "application/json",
+    "anthropic-version": "2023-06-01"
+  },
+  "max_tokens": 1020,
+  "host": "https://api.anthropic.com/v1/messages",
+  "model": "claude-3-5-sonnet-20241022"
+}

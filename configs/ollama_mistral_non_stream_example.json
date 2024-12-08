@@ -1,0 +1,15 @@
+{
+  "api_type": "ollama",
+  "model": "mistral:latest", //insert any models from Ollama that are on your local machine
+  "messages": [
+    {
+      "role": "system", //"system" is a prompt to define how the model should act.
+      "content": "You are an application security engineer..." //system prompt should be written here
+    },
+    {
+      "role": "user", //"user" is a prompt provided by the user.
+      "content": "why is the sky blue" //user prompt should be written here
+    }
+  ],
+  "stream": false //returns as a full message rather than a streamed response
+}

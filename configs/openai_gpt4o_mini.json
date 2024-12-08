@@ -1,0 +1,11 @@
+{
+  "api_type": "openai",
+  "headers": {
+    "Authorization": "Bearer {$OPENAI_API_KEY}",
+    "Content-Type": "application/json"
+  },
+  "stream": false,
+  "host": "https://api.openai.com/v1/chat/completions",
+  "model": "gpt-4o-mini",
+  "temperature": 0.1
+}
