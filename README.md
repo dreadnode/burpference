@@ -24,7 +24,7 @@ Ahoy, mateys! Gather 'round and lend an ear, fer I be here to tell ye ‘bout a 
 - **Snatch Responses Like Booty!** Aye, Burp Suite will be yer trusty lookout, automatically capturing the responses that drift into yer scope. This extension listens close, plucks the details, and hoists ‘em aboard.
 - **Send ‘Em Off to the High Seas:** Once ye got yer hands on those responses, ye forward 'em straight to yer configured API endpoint in JSON bottles, complete with any prompts or authentication codes ye need to unlock the treasure.
   - Only what’s in scope be sent, so ye sharpen yer cutlass and avoid wastin’ precious resources on extra inferences, arrr!
-  - By default, specific MIME types are excluded ([here](https://github.com/dreadnode/burpference/blob/7c390454eab3f5277423ccf94b9e16bfe89d6d45/burpference/python/burpference.py#L630)).
+  - By default, specific MIME types are excluded ([here](https://github.com/dreadnode/burpference/blob/aafd5ec63af2d658cac2235c5d61ef6238fa6501/burpference/python/burpference.py#L601)).
   - Color me hearties tabs that include `critial/high/medium/low/informational` findings from ye model for easy sights through ya telescopes.
 - **Spy on Yer Loot:** There be a log, savvy? Where ye can gaze upon the intercepted responses, the API requests ye sent, and the replies ye got—laid bare fer yer keen pirate eyes to see.
 - **Customize to Yer Heart’s Content:** Modify yer system prompts, API key, or remote host as ye see fit. Just hoist yer own configuration files and sail smoothly through yer own custom waters.
