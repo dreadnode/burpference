@@ -1,0 +1,9 @@
+{
+  "api_type": "groq-openai",
+  "headers": {
+    "x-api-key": "{$GROQ_API_KEY}",
+    "Content-Type": "application/json"
+  },
+  "host": "https://api.groq.com/openai/v1/chat/completions",
+  "model": "mixtral-8x7b-32768"
+}

@@ -1,0 +1,20 @@
+.DS_Store
+logs/
+.idea/workspace.xml
+.vscode/
+.env
+archive/autogpt/.gradle/*
+archive/autogpt/.gradle/buildOutputCleanup/cache.properties
+.lock
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+# Ignore $py.class files (generated when running burp)
+
+.*$py.*class
+burpference/api_adapters$py.class
+burpference/consts$py.class
