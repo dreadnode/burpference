@@ -23,7 +23,7 @@ Some key features:
 - **Automated Response Capture**: Burp Suite acts as your client monitor, automatically capturing responses that fall within your defined scope. This extension listens for, captures, and processes these details with an offensive-focused agent.
 - **API Integration**: Once requests and response streams are captured, they are packaged and forwarded to your configured API endpoint in JSON format, including any necessary system-level prompts or authentication tokens.
   - Only in-scope items are sent, optimizing resource usage and avoiding unnecessary API calls.
-  - By default, [certain MIME types are excluded](https://github.com/dreadnode/burpference/blob/779d42fc31c5414b64ed857ed0e2770d5c278e4b/burpference/burpference.py#L606).
+  - By default, [certain MIME types are excluded](https://github.com/dreadnode/burpference/blob/7e81641e263bbdfe4a38e30746eb3c27f3454190/burpference/burpference.py#L616).
   - Color-coded tabs display `critical/high/medium/low/informational` findings from your model for easy visualization.
 - **Comprehensive Logging**: A logging system allows you to review intercepted responses, API requests sent, and replies received—all clearly displayed for analysis.
   - A clean table interface displaying all logs, intercepted responses, API calls, and status codes for comprehensive engagement tracking.
@@ -44,7 +44,7 @@ Before using **Burpference**, ensure you have the following:
 2. Installed Burp Suite (Community or Professional edition).
 3. Downloaded and set up Jython standalone `.jar` file (a Python interpreter compatible with Java) to run Python-based extensions in Burp Suite.
    1. You do not need Python2.x runtime in your environment for this to work.
-4. The [`registerExtenderCallbacks`](https://github.com/dreadnode/burpference/blob/779d42fc31c5414b64ed857ed0e2770d5c278e4b/burpference/burpference.py#L47) reads a configuration file specific to the remote endpoint's input requirements. Ensure this exists in your environment and Burp has the necessary permissions to access it's location on the filesystem.
+4. The [`registerExtenderCallbacks`](https://github.com/dreadnode/burpference/blob/7e81641e263bbdfe4a38e30746eb3c27f3454190/burpference/burpference.py#L54) reads a configuration file specific to the remote endpoint's input requirements. Ensure this exists in your environment and Burp has the necessary permissions to access it's location on the filesystem.
    1. **Important**: as Burp Suite cannot read from a filesystem's `os` environment, you will need to explicitly include API key values in the configuration `.json` files per-provider.
    2. If you intend to fork or contribute to burpference, ensure that you have excluded the files from git tracking via `.gitignore`.
    3. There's also a pre-commit hook in the repo as an additional safety net. Install pre-commit hooks [here](https://pre-commit.com/#install).
