@@ -2,6 +2,18 @@
 
 Experimenting with yarrr' Burp Proxy tab going brrrrrrrrrrrrr.
 
+<div align="center">
+
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/dreadnode/burpference)](https://github.com/dreadnode/burpference/releases)
+[![GitHub stars](https://img.shields.io/github/stars/dreadnode/burpference?style=social)](https://github.com/dreadnode/burpference/stargazers)
+[![GitHub license](https://img.shields.io/github/license/dreadnode/burpference)](https://github.com/dreadnode/burpference/blob/main/LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dreadnode/burpference/pulls)
+
+•
+[Report Bug](https://github.com/dreadnode/burpference/issues) •
+
+</div>
+
 - [burpference](#burpference)
   - [Prerequisites](#prerequisites)
   - [Setup Guide](#setup-guide)
@@ -15,6 +27,9 @@ Experimenting with yarrr' Burp Proxy tab going brrrrrrrrrrrrr.
     - [5. Additional options:](#5-additional-options)
   - [Development and known bugs:](#development-and-known-bugs)
   - [Support the Project and Contributing](#support-the-project-and-contributing)
+    - [Star History](#star-history)
+
+<br>
 
 "_burpference_" started as a research idea of offensive agent capabilities and is a fun take on Burp Suite and running inference. The extension is open-source and designed to capture in-scope HTTP requests and responses from Burp's proxy history and ship them to a remote LLM API in JSON format. It's designed with a flexible approach where you can configure custom system prompts, store API keys and select remote hosts from numerous model providers as well as the ability for you to create your own API configuration. The idea is for an LLM to act as an agent in an offensive web application engagement to leverage your skills and surface findings and lingering vulnerabilities. By being able to create your own configuration and model provider allows you to also host models locally via Ollama to prevent potential high inference costs and potential network delays or rate limits.
 
@@ -144,6 +159,8 @@ The following known issues are something that have been reported so far and mark
 ## Support the Project and Contributing
 
 We welcome any issues or contributions to the project, share the treasure! If you like our project, please feel free to drop us some love <3
+
+### Star History
 
 [![GitHub stars](https://img.shields.io/github/stars/dreadnode/burpference?style=social)](https://github.com/dreadnode/burpference/stargazers)
 
