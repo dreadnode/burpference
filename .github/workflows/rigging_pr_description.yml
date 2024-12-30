@@ -19,10 +19,11 @@ jobs:
       # Get the diff first
       - name: Get Diff
         id: diff
+        # shellcheck disable=SC2102
         run: |
           git fetch origin "${{ github.base_ref }}"
           MERGE_BASE=$(git merge-base HEAD "origin/${{ github.base_ref }}")
-          # Encode the diff as base64 with explicit newline handling
+          # Use separate diff arguments instead of range notation
           DIFF=$(git diff "$MERGE_BASE" HEAD | base64 --wrap=0)
           echo "diff=${DIFF}" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b #v5.0.3
