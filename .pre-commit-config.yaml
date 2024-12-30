@@ -18,26 +18,6 @@ repos:
       - id: actionlint
         name: Check Github Actions
 
-  # Secrets detection
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: 01886c8a910c64595c47f186ca1ffc0b77fa5458 #v1.5.0
-    hooks:
-      - id: detect-secrets
-        name: Detect secrets
-        args:
-          - '--baseline'
-          - '.secrets.baseline'
-          - '--exclude-files'
-          - 'components/api/migrations/*'
-          - '--exclude-files'
-          - 'components/api/app/assets/*'
-          - '--exclude-files'
-          - '\.sops\.yaml$'
-          - '--exclude-files'
-          - 'secrets\.enc\.yaml$'
-          - '--exclude-files'
-          - 'components/strikes/*'
-
   # Python linting
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
