@@ -108,7 +108,6 @@ In order to serve inference as part of burpference, the model must be running on
     "name": "HuggingFace Code Review",
     "model": "bigcode/starcoder",
     "host": "https://api-inference.huggingface.co/models/bigcode/starcoder",
-    "api_key": "YOUR_HUGGINGFACE_API_KEY",
     "headers": {
         "Authorization": "YOUR_HUGGINGFACE_API_KEY",
         "Content-Type": "application/json"
