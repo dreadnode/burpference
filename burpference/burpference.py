@@ -3,9 +3,20 @@
 from burp import IBurpExtender, ITab, IHttpListener
 from java.awt import BorderLayout, GridBagLayout, GridBagConstraints, Font
 from javax.swing import (
-    JPanel, JTextArea, JScrollPane,
-    BorderFactory, JSplitPane, JButton, JComboBox,
-    JTable, table, ListSelectionModel, JOptionPane, JTextField, JTabbedPane)
+    JPanel,
+    JTextArea,
+    JScrollPane,
+    BorderFactory,
+    JSplitPane,
+    JButton,
+    JComboBox,
+    JTable,
+    table,
+    ListSelectionModel,
+    JOptionPane,
+    JTextField,
+    JTabbedPane,
+)
 from javax.swing.table import DefaultTableCellRenderer, TableRowSorter
 from javax.swing.border import TitledBorder
 from java.util import Comparator
@@ -19,7 +30,7 @@ from api_adapters import get_api_adapter
 
 def load_ascii_art(file_path):
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             return file.read()
     except IOError:
         return "Failed to load ASCII art"
@@ -29,19 +40,17 @@ SQUID_ASCII = load_ascii_art(SQUID_ASCII_FILE)
 
 
 class BurpExtender(IBurpExtender, ITab, IHttpListener):
-
     def __init__(self):
         self.popupShown = False
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         try:
             if not os.path.exists(LOG_DIR):
-                os.makedirs(LOG_DIR, 0755)
+                os.makedirs(LOG_DIR, 0o755)
         except OSError as e:
             print("Failed to create log directory: %s" % str(e))
 
         self.log_file_path = os.path.join(
-            LOG_DIR,
-            "burpference_log_{}.txt".format(timestamp)
+            LOG_DIR, "burpference_log_{}.txt".format(timestamp)
         )
         self.config = None
         self.api_adapter = None
@@ -66,7 +75,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
         outerBorder = BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "burpference, made with <3 by @dreadnode"
+            "burpference, made with <3 by @dreadnode",
         )
         outerBorder.setTitleColor(DREADNODE_PURPLE)
         outerBorder.setTitleFont(Font(Font.SANS_SERIF, Font.BOLD, 12))
@@ -104,8 +113,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.logArea.setCaretColor(DREADNODE_GREY)
         logScrollPane = JScrollPane(self.logArea)
         border = BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "Extension Log Output"
+            BorderFactory.createLineBorder(DREADNODE_ORANGE), "Extension Log Output"
         )
         border.setTitleColor(DREADNODE_ORANGE)
         boldFont = border.getTitleFont().deriveFont(Font.BOLD, 14)
@@ -118,8 +126,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.temp_log_messages = []
 
         # Create a split pane for input and log
-        splitPane = JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                               inputPanel, logScrollPane)
+        splitPane = JSplitPane(JSplitPane.VERTICAL_SPLIT, inputPanel, logScrollPane)
         splitPane.setBackground(DARK_BACKGROUND)
         splitPane.setDividerSize(0)
         splitPane.setEnabled(False)
@@ -133,7 +140,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.historyTable.setSelectionForeground(DREADNODE_GREY)
         self.historyTable.setGridColor(DREADNODE_GREY)
         self.historyTableModel = table.DefaultTableModel(
-            ["#", "Timestamp", "Host", "URL", "Request", "Response"], 0)
+            ["#", "Timestamp", "Host", "URL", "Request", "Response"], 0
+        )
         self.historyTable.setModel(self.historyTableModel)
 
         class NumericComparator(Comparator):
@@ -156,11 +164,11 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         # Set selection mode and listener
         self.historyTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
         self.historyTable.getSelectionModel().addListSelectionListener(
-            self.historyTableSelectionChanged)
+            self.historyTableSelectionChanged
+        )
         historyScrollPane = JScrollPane(self.historyTable)
         border = BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "HTTP History"
+            BorderFactory.createLineBorder(DREADNODE_ORANGE), "HTTP History"
         )
         border.setTitleColor(DREADNODE_ORANGE)
         boldFont = border.getTitleFont().deriveFont(Font.BOLD, 14)
@@ -178,7 +186,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         requestScrollPane = JScrollPane(self.requestArea)
         border = BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "Inference Request - Live View"
+            "Inference Request - Live View",
         )
         border.setTitleColor(DREADNODE_ORANGE)
         boldFont = border.getTitleFont().deriveFont(Font.BOLD, 14)
@@ -195,7 +203,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         responseScrollPane = JScrollPane(self.responseArea)
         border = BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "Inference Response - Live View"
+            "Inference Response - Live View",
         )
         border.setTitleColor(DREADNODE_ORANGE)
         boldFont = border.getTitleFont().deriveFont(Font.BOLD, 14)
@@ -204,7 +212,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
         # Create split panes
         diffSplitPane = JSplitPane(
-            JSplitPane.HORIZONTAL_SPLIT, requestScrollPane, responseScrollPane)
+            JSplitPane.HORIZONTAL_SPLIT, requestScrollPane, responseScrollPane
+        )
         diffSplitPane.setBackground(DARK_BACKGROUND)
         diffSplitPane.setDividerSize(2)
         diffSplitPane.setResizeWeight(0.5)
@@ -220,7 +229,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         selectedRequestScrollPane = JScrollPane(self.selectedRequestArea)
         border = BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "Selected HTTP Request & Response"
+            "Selected HTTP Request & Response",
         )
         border.setTitleColor(DREADNODE_ORANGE)
         boldFont = border.getTitleFont().deriveFont(Font.BOLD, 14)
@@ -237,7 +246,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         selectedResponseScrollPane = JScrollPane(self.selectedResponseArea)
         border = BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "Selected Inference Response"
+            "Selected Inference Response",
         )
         border.setTitleColor(DREADNODE_ORANGE)
         boldFont = border.getTitleFont().deriveFont(Font.BOLD, 14)
@@ -245,14 +254,18 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         selectedResponseScrollPane.setBorder(border)
 
         selectedDiffSplitPane = JSplitPane(
-            JSplitPane.HORIZONTAL_SPLIT, selectedRequestScrollPane,     selectedResponseScrollPane)
+            JSplitPane.HORIZONTAL_SPLIT,
+            selectedRequestScrollPane,
+            selectedResponseScrollPane,
+        )
         selectedDiffSplitPane.setBackground(DARK_BACKGROUND)
         selectedDiffSplitPane.setDividerSize(2)
         selectedDiffSplitPane.setResizeWeight(0.5)
 
         # Main split pane for history and selected entry
         mainSplitPane = JSplitPane(
-            JSplitPane.VERTICAL_SPLIT, historyScrollPane, selectedDiffSplitPane)
+            JSplitPane.VERTICAL_SPLIT, historyScrollPane, selectedDiffSplitPane
+        )
         mainSplitPane.setBackground(DARK_BACKGROUND)
         mainSplitPane.setDividerSize(2)
         mainSplitPane.setResizeWeight(0.5)
@@ -284,10 +297,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.log_message("Extension initialized and running.")
 
         callbacks.printOutput(SQUID_ASCII + "\n\n")
-        callbacks.printOutput(
-            "Yer configs be stowed and ready from " + CONFIG_DIR)
-        callbacks.printOutput(
-            "\nNow ye be speakin' the pirate's tongue, savvy?")
+        callbacks.printOutput("Yer configs be stowed and ready from " + CONFIG_DIR)
+        callbacks.printOutput("\nNow ye be speakin' the pirate's tongue, savvy?")
 
         self.promptForConfiguration()
         self.applyDarkTheme(self.tabbedPane)
@@ -301,10 +312,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
     def stopExtension(self, event):
         if self.is_running:
             self.is_running = False
-            self._callbacks.removeHttpListener(
-                self)
-            self.log_message(
-                "Extension stopped. No further traffic will be processed.")
+            self._callbacks.removeHttpListener(self)
+            self.log_message("Extension stopped. No further traffic will be processed.")
             self.updateUIState()
 
     def updateUIState(self):
@@ -315,7 +324,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             self.stopButton.addActionListener(self.stopExtension)
         else:
             self.stopButton.setText(
-                "Extension Stopped - Unload and reload if required, doing so will remove displayed logs and state")
+                "Extension Stopped - Unload and reload if required, doing so will remove displayed logs and state"
+            )
             for listener in self.stopButton.getActionListeners():
                 self.stopButton.removeActionListener(listener)
 
@@ -323,17 +333,18 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         if not os.path.exists(CONFIG_DIR):
             self.log_message("Config directory not found: {CONFIG_DIR}")
             return []
-        return [f for f in os.listdir(CONFIG_DIR) if f.endswith('.json')]
+        return [f for f in os.listdir(CONFIG_DIR) if f.endswith(".json")]
 
     def loadConfiguration(self, event):
         selected_config = self.configSelector.getSelectedItem()
         config_path = os.path.join(CONFIG_DIR, selected_config)
         if os.path.exists(config_path):
             try:
-                with open(config_path, 'r') as config_file:
+                with open(config_path, "r") as config_file:
                     self.config = json.load(config_file)
-                self.log_message("Loaded configuration: %s" %
-                                 json.dumps(self.config, indent=2))
+                self.log_message(
+                    "Loaded configuration: %s" % json.dumps(self.config, indent=2)
+                )
                 try:
                     self.api_adapter = get_api_adapter(self.config)
                     self.log_message("API adapter initialized successfully")
@@ -342,21 +353,21 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                     self.api_adapter = None
                 except Exception as e:
                     self.log_message(
-                        "Unexpected error initializing API adapter: %s" % str(e))
+                        "Unexpected error initializing API adapter: %s" % str(e)
+                    )
                     self.api_adapter = None
             except ValueError as e:
                 self.log_message(
-                    "Error parsing JSON in configuration file: %s" % str(e))
+                    "Error parsing JSON in configuration file: %s" % str(e)
+                )
                 self.config = None
                 self.api_adapter = None
             except Exception as e:
-                self.log_message(
-                    "Unexpected error loading configuration: %s" % str(e))
+                self.log_message("Unexpected error loading configuration: %s" % str(e))
                 self.config = None
                 self.api_adapter = None
         else:
-            self.log_message(
-                "Configuration file %s not found." % selected_config)
+            self.log_message("Configuration file %s not found." % selected_config)
             self.config = None
             self.api_adapter = None
 
@@ -372,18 +383,19 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.inferenceLogTable.setGridColor(DREADNODE_GREY)
 
         self.inferenceLogTableModel = table.DefaultTableModel(
-            ["Timestamp", "API Endpoint", "Proxy Request", "Model Response", "Status"], 0)
+            ["Timestamp", "API Endpoint", "Proxy Request", "Model Response", "Status"],
+            0,
+        )
         self.inferenceLogTable.setModel(self.inferenceLogTableModel)
-        self.inferenceLogTable.setSelectionMode(
-            ListSelectionModel.SINGLE_SELECTION)
+        self.inferenceLogTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
 
         self.inferenceLogTable.getSelectionModel().addListSelectionListener(
-            self.inferenceLogSelectionChanged)
+            self.inferenceLogSelectionChanged
+        )
 
         inferenceLogScrollPane = JScrollPane(self.inferenceLogTable)
         border = BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "API Requests Log"
+            BorderFactory.createLineBorder(DREADNODE_ORANGE), "API Requests Log"
         )
         border.setTitleColor(DREADNODE_ORANGE)
         border.setTitleFont(border.getTitleFont().deriveFont(Font.BOLD, 14))
@@ -396,10 +408,12 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.inferenceRequestDetail.setBackground(LIGHTER_BACKGROUND)
         self.inferenceRequestDetail.setForeground(DREADNODE_ORANGE)
         requestDetailPane = JScrollPane(self.inferenceRequestDetail)
-        requestDetailPane.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "Inference Request Detail"
-        ))
+        requestDetailPane.setBorder(
+            BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(DREADNODE_ORANGE),
+                "Inference Request Detail",
+            )
+        )
 
         self.inferenceResponseDetail = JTextArea(10, 30)
         self.inferenceResponseDetail.setEditable(False)
@@ -408,24 +422,22 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.inferenceResponseDetail.setBackground(LIGHTER_BACKGROUND)
         self.inferenceResponseDetail.setForeground(DREADNODE_ORANGE)
         responseDetailPane = JScrollPane(self.inferenceResponseDetail)
-        responseDetailPane.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(DREADNODE_ORANGE),
-            "Inference Response Detail"
-        ))
+        responseDetailPane.setBorder(
+            BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(DREADNODE_ORANGE),
+                "Inference Response Detail",
+            )
+        )
 
         # Create split pane for details
         detailsSplitPane = JSplitPane(
-            JSplitPane.HORIZONTAL_SPLIT,
-            requestDetailPane,
-            responseDetailPane
+            JSplitPane.HORIZONTAL_SPLIT, requestDetailPane, responseDetailPane
         )
         detailsSplitPane.setResizeWeight(0.5)
 
         # Create main split pane
         mainSplitPane = JSplitPane(
-            JSplitPane.VERTICAL_SPLIT,
-            inferenceLogScrollPane,
-            detailsSplitPane
+            JSplitPane.VERTICAL_SPLIT, inferenceLogScrollPane, detailsSplitPane
         )
         mainSplitPane.setResizeWeight(0.5)
 
@@ -438,8 +450,12 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         if selectedRow != -1:
             try:
                 # Get the request and response data from columns
-                request = self.inferenceLogTableModel.getValueAt(selectedRow, 2)  # Proxy Request column
-                response = self.inferenceLogTableModel.getValueAt(selectedRow, 3)  # Model Response column
+                request = self.inferenceLogTableModel.getValueAt(
+                    selectedRow, 2
+                )  # Proxy Request column
+                response = self.inferenceLogTableModel.getValueAt(
+                    selectedRow, 3
+                )  # Model Response column
 
                 # Format the request JSON
                 try:
@@ -458,11 +474,15 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                     else:
                         response_obj = json.loads(response)
 
-                    if isinstance(response_obj, dict) and 'message' in response_obj and 'content' in response_obj['message']:
+                    if (
+                        isinstance(response_obj, dict)
+                        and "message" in response_obj
+                        and "content" in response_obj["message"]
+                    ):
                         # Get just the content string and handle unicode
-                        content = response_obj['message']['content']
+                        content = response_obj["message"]["content"]
                         # Handle unicode strings and newlines
-                        formatted_response = content.replace('\\n', '\n')
+                        formatted_response = content.replace("\\n", "\n")
                     else:
                         formatted_response = json.dumps(response_obj, indent=2)
                 except (ValueError, AttributeError, TypeError):
@@ -490,8 +510,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                     http_pair = json.loads(http_pair_json)
                     self.selectedRequestArea.setText(json.dumps(http_pair, indent=2))
 
-                    model_text = model_analysis.strip('"').decode('unicode_escape')
-                    model_text = model_text.replace('\\n', '\n')
+                    model_text = model_analysis.strip('"').decode("unicode_escape")
+                    model_text = model_text.replace("\\n", "\n")
                     self.selectedResponseArea.setText(model_text)
 
                     self.selectedRequestArea.setCaretPosition(0)
@@ -507,12 +527,19 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
     def colorizeHistoryTable(self):
         renderer = self.SeverityCellRenderer()
         for column in range(self.historyTable.getColumnCount()):
-            self.historyTable.getColumnModel().getColumn(column).setCellRenderer(renderer)
+            self.historyTable.getColumnModel().getColumn(column).setCellRenderer(
+                renderer
+            )
 
     class SeverityCellRenderer(DefaultTableCellRenderer):
-        def getTableCellRendererComponent(self, table, value, isSelected, hasFocus, row, column):
-            component = super(BurpExtender.SeverityCellRenderer, self).getTableCellRendererComponent(
-                table, value, isSelected, hasFocus, row, column)
+        def getTableCellRendererComponent(
+            self, table, value, isSelected, hasFocus, row, column
+        ):
+            component = super(
+                BurpExtender.SeverityCellRenderer, self
+            ).getTableCellRendererComponent(
+                table, value, isSelected, hasFocus, row, column
+            )
 
             component.setForeground(DREADNODE_GREY)
 
@@ -557,17 +584,16 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             self.temp_log_messages.append(log_entry)
         else:
             self.logArea.append(log_entry)
-            self.logArea.setCaretPosition(
-                self.logArea.getDocument().getLength())
+            self.logArea.setCaretPosition(self.logArea.getDocument().getLength())
 
         try:
             # Try to create/write to log file with explicit permissions
             log_dir = os.path.dirname(self.log_file_path)
             if not os.path.exists(log_dir):
-                os.makedirs(log_dir, 0755)  # Python2 octal notation
+                os.makedirs(log_dir, 0o755)
 
             # Open with explicit write permissions
-            with open(self.log_file_path, 'a+') as log_file:
+            with open(self.log_file_path, "a+") as log_file:
                 log_file.write(log_entry)
         except (IOError, OSError) as e:
             print("Warning: Could not write to log file: %s" % str(e))
@@ -594,7 +620,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             component.setDividerSize(2)
             component.setDividerLocation(0.5)
 
-        if hasattr(component, 'getComponents'):
+        if hasattr(component, "getComponents"):
             for child in component.getComponents():
                 self.applyDarkTheme(child)
 
@@ -602,8 +628,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         if not self.is_running:
             return
         if not self.api_adapter:
-            if not hasattr(self, '_no_adapter_logged'):
-                self.log_message("No API adapter configured. Please select a configuration file.")
+            if not hasattr(self, "_no_adapter_logged"):
+                self.log_message(
+                    "No API adapter configured. Please select a configuration file."
+                )
                 self._no_adapter_logged = True
             return
         if messageIsRequest:
@@ -614,10 +642,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             response = messageInfo
 
             # Filter MIME content types to reduce noise and exceeding tokens
-            responseInfo = self._helpers.analyzeResponse(
-                response.getResponse())
+            responseInfo = self._helpers.analyzeResponse(response.getResponse())
             contentType = responseInfo.getStatedMimeType().lower()
-            if contentType in ['css', 'image', 'script', 'video', 'audio', 'font']:
+            if contentType in ["css", "image", "script", "video", "audio", "font"]:
                 return
 
             # Filter request size
@@ -625,20 +652,24 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                 return
             try:
                 analyzed_request = self._helpers.analyzeRequest(request)
-                analyzed_response = self._helpers.analyzeResponse(response.getResponse())
+                analyzed_response = self._helpers.analyzeResponse(
+                    response.getResponse()
+                )
 
                 # Get the body bytes
-                request_body = request.getRequest()[analyzed_request.getBodyOffset():]
-                response_body = response.getResponse()[analyzed_response.getBodyOffset():]
+                request_body = request.getRequest()[analyzed_request.getBodyOffset() :]
+                response_body = response.getResponse()[
+                    analyzed_response.getBodyOffset() :
+                ]
 
                 # Try to safely decode bodies, fallback to hex for binary data
                 try:
-                    request_body_str = request_body.tostring().decode('utf-8')
+                    request_body_str = request_body.tostring().decode("utf-8")
                 except UnicodeDecodeError:
                     request_body_str = "<binary data length: %d>" % len(request_body)
 
                 try:
-                    response_body_str = response_body.tostring().decode('utf-8')
+                    response_body_str = response_body.tostring().decode("utf-8")
                 except UnicodeDecodeError:
                     response_body_str = "<binary data length: %d>" % len(response_body)
 
@@ -655,33 +686,41 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                 request_data = {
                     "method": analyzed_request.getMethod(),
                     "url": str(request.getUrl()),
-                    "headers": dict(header.split(': ', 1) for header in analyzed_request.getHeaders()[1:] if ': ' in header),
-                    "body": request_body_str
+                    "headers": dict(
+                        header.split(": ", 1)
+                        for header in analyzed_request.getHeaders()[1:]
+                        if ": " in header
+                    ),
+                    "body": request_body_str,
                 }
 
                 # Package the original HTTP response
                 response_data = {
                     "status_code": analyzed_response.getStatusCode(),
-                    "headers": dict(header.split(': ', 1) for header in analyzed_response.getHeaders()[1:] if ': ' in header),
-                    "body": response_body_str
+                    "headers": dict(
+                        header.split(": ", 1)
+                        for header in analyzed_response.getHeaders()[1:]
+                        if ": " in header
+                    ),
+                    "body": response_body_str,
                 }
 
                 # Create the HTTP pair to send to the model
-                http_pair = {
-                    "request": request_data,
-                    "response": response_data
-                }
+                http_pair = {"request": request_data, "response": response_data}
 
                 # Load prompt template for system role
                 if os.path.exists(PROXY_PROMPT):
-                    with open(PROXY_PROMPT, 'r') as prompt_file:
+                    with open(PROXY_PROMPT, "r") as prompt_file:
                         system_content = prompt_file.read().strip()
                     # Only log if there's an issue or if it's different from last time
-                    if not hasattr(self, '_last_system_content') or system_content != self._last_system_content:
+                    if (
+                        not hasattr(self, "_last_system_content")
+                        or system_content != self._last_system_content
+                    ):
                         self.log_message("Custom prompt loaded from " + PROXY_PROMPT)
                         self._last_system_content = system_content
                 else:
-                    if not hasattr(self, '_prompt_missing_logged'):
+                    if not hasattr(self, "_prompt_missing_logged"):
                         self.log_message("No prompt file found. Using default prompt.")
                         self._prompt_missing_logged = True
                     system_content = "Examine this request and response pair for any security issues:"
@@ -689,7 +728,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                 # Prepare the request using the adapter
                 remote_request = self.api_adapter.prepare_request(
                     user_content=json.dumps(http_pair, indent=2),
-                    system_content=system_content
+                    system_content=system_content,
                 )
 
                 # Send request to model
@@ -700,18 +739,22 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                 try:
                     response = urllib2.urlopen(req, json.dumps(remote_request))
                     response_data = response.read()
-                    processed_response = self.api_adapter.process_response(response_data)
+                    processed_response = self.api_adapter.process_response(
+                        response_data
+                    )
                     status = "Success"
                 except urllib2.HTTPError as e:
-                    error_message = e.read().decode('utf-8')
+                    error_message = e.read().decode("utf-8")
                     error_details = {
                         "status_code": e.code,
                         "headers": dict(e.headers),
-                        "body": error_message
+                        "body": error_message,
                     }
                     processed_response = json.dumps(error_details, indent=2)
-                    self.log_message("API Error Response:\nStatus Code: %d\nHeaders: %s\nBody: %s" %
-                                     (e.code, dict(e.headers), error_message))
+                    self.log_message(
+                        "API Error Response:\nStatus Code: %d\nHeaders: %s\nBody: %s"
+                        % (e.code, dict(e.headers), error_message)
+                    )
                     status = "Failed (%d)" % e.code
                 except Exception as e:
                     processed_response = "Error: %s" % str(e)
@@ -721,51 +764,75 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                 # Always log to inference logger
                 if self.is_running:
                     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    self.inferenceLogTableModel.addRow([
-                        timestamp,
-                        self.config.get("host", ""),
-                        json.dumps(remote_request),
-                        processed_response,
-                        status
-                    ])
+                    self.inferenceLogTableModel.addRow(
+                        [
+                            timestamp,
+                            self.config.get("host", ""),
+                            json.dumps(remote_request),
+                            processed_response,
+                            status,
+                        ]
+                    )
 
                 # Only update the main UI if we got a successful response
                 if status == "Success" and self.is_running:
                     # Add to history table with metadata
-                    self.historyTableModel.addRow([
-                        table_metadata.get("id", ""),
-                        timestamp,
-                        table_metadata.get("host", ""),
-                        table_metadata.get("url", ""),
-                        json.dumps(http_pair, indent=2),  # Store the HTTP request/response pair
-                        json.dumps(processed_response, indent=2)  # Store the model's analysis
-                    ])
+                    self.historyTableModel.addRow(
+                        [
+                            table_metadata.get("id", ""),
+                            timestamp,
+                            table_metadata.get("host", ""),
+                            table_metadata.get("url", ""),
+                            json.dumps(
+                                http_pair, indent=2
+                            ),  # Store the HTTP request/response pair
+                            json.dumps(
+                                processed_response, indent=2
+                            ),  # Store the model's analysis
+                        ]
+                    )
                     self.colorizeHistoryTable()
 
-                    self.requestArea.append("\n\n=== Request #" + str(self.request_counter) + " ===\n")
+                    self.requestArea.append(
+                        "\n\n=== Request #" + str(self.request_counter) + " ===\n"
+                    )
                     try:
                         # Format the request nicely
                         formatted_request = json.dumps(http_pair, indent=2)
-                        formatted_request = formatted_request.replace('\\n', '\n')
+                        formatted_request = formatted_request.replace("\\n", "\n")
                         formatted_request = formatted_request.replace('\\"', '"')
                         self.requestArea.append(formatted_request)
                     except Exception as e:
                         self.requestArea.append(str(http_pair))
-                    self.requestArea.setCaretPosition(self.requestArea.getDocument().getLength())
+                    self.requestArea.setCaretPosition(
+                        self.requestArea.getDocument().getLength()
+                    )
 
-                    self.responseArea.append("\n\n=== Response #" + str(self.request_counter) + " ===\n")
+                    self.responseArea.append(
+                        "\n\n=== Response #" + str(self.request_counter) + " ===\n"
+                    )
                     try:
                         # Format the response nicely
-                        if isinstance(processed_response, dict) and 'message' in processed_response and 'content' in processed_response['message']:
-                            formatted_response = processed_response['message']['content']
+                        if (
+                            isinstance(processed_response, dict)
+                            and "message" in processed_response
+                            and "content" in processed_response["message"]
+                        ):
+                            formatted_response = processed_response["message"][
+                                "content"
+                            ]
                         else:
-                            formatted_response = json.dumps(processed_response, indent=2)
-                        formatted_response = formatted_response.replace('\\n', '\n')
+                            formatted_response = json.dumps(
+                                processed_response, indent=2
+                            )
+                        formatted_response = formatted_response.replace("\\n", "\n")
                         formatted_response = formatted_response.replace('\\"', '"')
                         self.responseArea.append(formatted_response)
                     except Exception as e:
                         self.responseArea.append(str(processed_response))
-                    self.responseArea.setCaretPosition(self.responseArea.getDocument().getLength())
+                    self.responseArea.setCaretPosition(
+                        self.responseArea.getDocument().getLength()
+                    )
 
             except Exception as e:
                 self.log_message("Error processing request: %s" % str(e))
@@ -776,4 +843,5 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             "Select a configuration file to load in the burpference extension"
             " tab and go brrr",
             "burpference Configuration Required",
-            JOptionPane.INFORMATION_MESSAGE)
+            JOptionPane.INFORMATION_MESSAGE,
+        )

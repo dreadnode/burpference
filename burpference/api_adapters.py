@@ -65,8 +65,8 @@ class OllamaChatAPIAdapter(BaseAPIAdapter):
             user_content = user_content.encode("utf-8", errors="replace").decode(
                 "utf-8"
             )
-        except Exception as e:
-            raise ValueError("Error encoding content: {str(e)}")
+        except Exception as err:
+            raise ValueError("Error encoding content: {str(err)}")
 
         return {
             "model": model,
@@ -146,11 +146,11 @@ class AnthropicAPIAdapter(BaseAPIAdapter):
         try:
             response = urllib2.urlopen(req)
             return response.read()
-        except urllib2.HTTPError as e:
-            error_message = e.read().decode("utf-8")
-            raise ValueError("HTTP Error {e.code}: {error_message}")
-        except Exception as e:
-            raise ValueError("Error sending request: {str(e)}")
+        except urllib2.HTTPError as err:
+            error_msg = err.read().decode("utf-8")
+            raise ValueError("HTTP Error {err.code}: {error_msg}")
+        except Exception as err:
+            raise ValueError("Error sending request: {str(err)}")
 
     def process_response(self, response_data):
         response = json.loads(response_data)
