@@ -18,16 +18,6 @@ repos:
       - id: actionlint
         name: Check Github Actions
 
-  # Python linting
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
-    rev: 8b76f04e7e5a9cd259e9d1db7799599355f97cdf # v0.8.2
-    hooks:
-      # Run the linter.
-      - id: ruff
-      # Run the formatter.
-      - id: ruff-format
-
   # Python code security
   - repo: https://github.com/PyCQA/bandit
     rev: 8fd258abbac759d62863779f946d6a88e8eabb0f #1.8.0

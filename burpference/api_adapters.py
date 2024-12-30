@@ -19,18 +19,18 @@ class BaseAPIAdapter(object):
     def process_response(self, response_data):
         pass
 
+
 # Ollama /generate API adapter class
 
 
 class OllamaGenerateAPIAdapter(BaseAPIAdapter):
     def prepare_request(self, system_content, user_content):
-        prompt = "{0}\n\nUser request:\n{1}".format(
-            system_content, user_content)
+        prompt = "{0}\n\nUser request:\n{1}".format(system_content, user_content)
         return {
             "model": self.config.get("model", "llama3.2"),
             "prompt": prompt,
             "format": self.config.get("format", "json"),
-            "stream": self.config.get("stream", False)
+            "stream": self.config.get("stream", False),
         }
 
     def process_response(self, response_data):
@@ -39,13 +39,18 @@ class OllamaGenerateAPIAdapter(BaseAPIAdapter):
 
 # Ollama /chat API adapter class
 
+
 class OllamaChatAPIAdapter(BaseAPIAdapter):
     def prepare_request(self, system_content, user_content):
         total_input_size = len(system_content) + len(user_content)
-        max_tokens = self.config.get("max_input_size", 32000)  # Default to 32k if not specified
+        max_tokens = self.config.get(
+            "max_input_size", 32000
+        )  # Default to 32k if not specified
 
         if total_input_size > max_tokens:
-            raise ValueError("Input size ({total_input_size} chars) exceeds maximum allowed ({max_tokens})")
+            raise ValueError(
+                "Input size ({total_input_size} chars) exceeds maximum allowed ({max_tokens})"
+            )
 
         model = self.config.get("model", "llama3.2")
         quantization = self.config.get("quantization")
@@ -54,8 +59,12 @@ class OllamaChatAPIAdapter(BaseAPIAdapter):
                 model = "{0}:{1}".format(model, quantization)
 
         try:
-            system_content = system_content.encode('utf-8', errors='replace').decode('utf-8')
-            user_content = user_content.encode('utf-8', errors='replace').decode('utf-8')
+            system_content = system_content.encode("utf-8", errors="replace").decode(
+                "utf-8"
+            )
+            user_content = user_content.encode("utf-8", errors="replace").decode(
+                "utf-8"
+            )
         except Exception as e:
             raise ValueError("Error encoding content: {str(e)}")
 
@@ -63,13 +72,14 @@ class OllamaChatAPIAdapter(BaseAPIAdapter):
             "model": model,
             "messages": [
                 {"role": "system", "content": system_content},
-                {"role": "user", "content": user_content}
+                {"role": "user", "content": user_content},
             ],
-            "stream": self.config.get("stream", False)
+            "stream": self.config.get("stream", False),
         }
 
     def process_response(self, response_data):
         return json.loads(response_data)
+
 
 # OpenAI /v1/chat/completions API adapter class
 
@@ -80,15 +90,15 @@ class OpenAIChatAPIAdapter(BaseAPIAdapter):
             "model": self.config.get("model", "gpt-4o-mini"),
             "messages": [
                 {"role": "system", "content": system_content},
-                {"role": "user", "content": user_content}
-            ]
+                {"role": "user", "content": user_content},
+            ],
         }
 
     def process_response(self, response_data):
         response = json.loads(response_data)
-        if 'choices' in response and len(response['choices']) > 0:
-            if 'message' in response['choices'][0]:
-                return response['choices'][0]['message']['content']
+        if "choices" in response and len(response["choices"]) > 0:
+            if "message" in response["choices"][0]:
+                return response["choices"][0]["message"]["content"]
             else:
                 raise ValueError("Unexpected response format: {response}")
         else:
@@ -97,16 +107,18 @@ class OpenAIChatAPIAdapter(BaseAPIAdapter):
     def send_request(self, request_payload):
         headers = {
             "Authorization": "Bearer {0}".format(self.config.get("api_key", "")),
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        req = urllib2.Request(self.config.get(
-            "host"), json.dumps(request_payload), headers=headers)
-        req.get_method = lambda: 'POST'
+        req = urllib2.Request(
+            self.config.get("host"), json.dumps(request_payload), headers=headers
+        )
+        req.get_method = lambda: "POST"
         response = urllib2.urlopen(req)
         return response.read()
 
 
 # Anthropic /v1/messages API adapter class
+
 
 class AnthropicAPIAdapter(BaseAPIAdapter):
     def prepare_request(self, user_content, system_content=None):
@@ -114,38 +126,41 @@ class AnthropicAPIAdapter(BaseAPIAdapter):
             "model": self.config.get("model", "claude-3-5-sonnet-20241022"),
             "max_tokens": int(self.config.get("max_tokens", 1020)),
             "system": system_content,
-            "messages": [
-                {"role": "user", "content": user_content}
-            ]
+            "messages": [{"role": "user", "content": user_content}],
         }
 
     def send_request(self, request_payload):
         headers = {
             "x-api-key": self.config.get("headers", {}).get("x-api-key", ""),
             "content-type": "application/json",
-            "anthropic-version": self.config.get("headers", {}).get("anthropic-version", "2023-06-01")
+            "anthropic-version": self.config.get("headers", {}).get(
+                "anthropic-version", "2023-06-01"
+            ),
         }
-        req = urllib2.Request(self.config.get("host"),
-                              data=json.dumps(request_payload).encode('utf-8'),
-                              headers=headers)
-        req.get_method = lambda: 'POST'
+        req = urllib2.Request(
+            self.config.get("host"),
+            data=json.dumps(request_payload).encode("utf-8"),
+            headers=headers,
+        )
+        req.get_method = lambda: "POST"
         try:
             response = urllib2.urlopen(req)
             return response.read()
         except urllib2.HTTPError as e:
-            error_message = e.read().decode('utf-8')
+            error_message = e.read().decode("utf-8")
             raise ValueError("HTTP Error {e.code}: {error_message}")
         except Exception as e:
             raise ValueError("Error sending request: {str(e)}")
 
     def process_response(self, response_data):
         response = json.loads(response_data)
-        if 'message' in response:
-            return response['message']['content']
-        elif 'content' in response:
-            return response['content']
+        if "message" in response:
+            return response["message"]["content"]
+        elif "content" in response:
+            return response["content"]
         else:
             raise ValueError("Unexpected response format: {response}")
+
 
 # Groq openai/v1/chat/completions
 
@@ -157,22 +172,23 @@ class GroqOpenAIChatAPIAdapter(BaseAPIAdapter):
             "max_tokens": int(self.config.get("max_tokens", 1020)),
             "messages": [
                 {"role": "system", "content": system_content},
-                {"role": "user", "content": user_content}
-            ]
+                {"role": "user", "content": user_content},
+            ],
         }
 
     def process_response(self, response_data):
         response = json.loads(response_data)
-        return response['choices'][0]['message']['content']
+        return response["choices"][0]["message"]["content"]
 
     def send_request(self, request_payload):
         headers = {
             "x-api-key": "{0}".format(self.config.get("api_key", "")),
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        req = urllib2.Request(self.config.get(
-            "host"), json.dumps(request_payload), headers=headers)
-        req.get_method = lambda: 'POST'
+        req = urllib2.Request(
+            self.config.get("host"), json.dumps(request_payload), headers=headers
+        )
+        req.get_method = lambda: "POST"
         response = urllib2.urlopen(req)
         return response.read()
 
@@ -184,24 +200,80 @@ class GroqOpenAIChatAPIStreamAdapter(BaseAPIAdapter):
             "max_tokens": int(self.config.get("max_tokens", 1020)),
             "messages": [
                 {"role": "system", "content": system_content},
-                {"role": "user", "content": user_content}
-            ]
+                {"role": "user", "content": user_content},
+            ],
         }
 
     def process_response(self, response_data):
         response = json.loads(response_data)
-        return response['choices'][0]['message']['content']
+        return response["choices"][0]["message"]["content"]
 
     def send_request(self, request_payload):
         headers = {
             "x-api-key": "{0}".format(self.config.get("api_key", "")),
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        req = urllib2.Request(self.config.get(
-            "host"), json.dumps(request_payload), headers=headers)
-        req.get_method = lambda: 'POST'
+        req = urllib2.Request(
+            self.config.get("host"), json.dumps(request_payload), headers=headers
+        )
+        req.get_method = lambda: "POST"
         response = urllib2.urlopen(req)
         return response.read()
+
+
+# HuggingFace API adapter class /chat-completion
+
+
+class HuggingFaceAPIAdapter(BaseAPIAdapter):
+    def prepare_request(self, user_content, system_content=None):
+        messages = []
+        if system_content:
+            messages.append({"role": "system", "content": system_content})
+        messages.append({"role": "user", "content": user_content})
+
+        return {
+            "inputs": {"messages": messages},
+            "parameters": {
+                "max_length": self.config.get("parameters", {}).get("max_length", 512),
+                "temperature": self.config.get("parameters", {}).get(
+                    "temperature", 0.7
+                ),
+                "top_p": self.config.get("parameters", {}).get("top_p", 0.9),
+                "repetition_penalty": self.config.get("parameters", {}).get(
+                    "repetition_penalty", 1.2
+                ),
+            },
+        }
+
+    def send_request(self, request_payload):
+        headers = self.config.get("headers", {})
+
+        if "Authorization" not in headers:
+            headers["Authorization"] = "Bearer {}".format(
+                self.config.get("api_key", "")
+            )
+
+        req = urllib2.Request(
+            self.config.get("host"),
+            json.dumps(request_payload).encode("utf-8"),
+            headers=headers,
+        )
+
+        try:
+            response = urllib2.urlopen(req)
+            return response.read()
+        except urllib2.HTTPError as e:
+            error_message = e.read().decode("utf-8")
+            raise ValueError("HTTP Error {}: {}".format(e.code, error_message))
+
+    def process_response(self, response_data):
+        response = json.loads(response_data)
+        if isinstance(response, list) and len(response) > 0:
+            return response[0].get("generated_text", "")
+        elif isinstance(response, dict):
+            return response.get("generated_text", str(response))
+        return str(response)
+
 
 # Generic other API base adapter
 
@@ -217,6 +289,7 @@ class OtherAPIAdapter(BaseAPIAdapter):
 
 
 # Function to define and load the API adapter
+
 
 def get_api_adapter(config):
     api_type = config.get("api_type", "").lower()
@@ -237,6 +310,8 @@ def get_api_adapter(config):
         return GroqOpenAIChatAPIAdapter(config)
     elif api_type == "groq-openai-stream":
         return GroqOpenAIChatAPIStreamAdapter(config)
+    elif api_type == "huggingface":
+        return HuggingFaceAPIAdapter(config)
     elif api_type == "other":
         return OtherAPIAdapter(config)
     else:

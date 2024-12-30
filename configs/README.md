@@ -15,6 +15,8 @@ If you intend to fork or contribute to burpference, ensure that you have exclude
     - [Example Anthropic `/messages` inference with `claude-3-5-sonnet-20241022`:](#example-anthropic-messages-inference-with-claude-3-5-sonnet-20241022)
   - [OpenAI Inference](#openai-inference)
     - [Example OpenAI `/completions` inference with `gpt-4o-mini`:](#example-openai-completions-inference-with-gpt-4o-mini)
+  - [HuggingFace Serveless Inference](#huggingface-serveless-inference)
+    - [Example HuggingFace `/text-generation` inference](#example-huggingface-text-generation-inference)
 - [Model System Prompts](#model-system-prompts)
 
 ---
@@ -93,6 +95,31 @@ In order to serve inference as part of burpference, the model must be running on
   "host": "https://api.openai.com/v1/chat/completions",
   "model": "gpt-4o-mini", <-- adjust based on your required usage
   "temperature": 0.1 <-- adjust based on your required usage
+}
+```
+
+### HuggingFace Serveless Inference
+
+#### Example HuggingFace `/text-generation` inference
+
+```json
+{
+    "api_type": "huggingface",
+    "name": "HuggingFace Code Review",
+    "model": "bigcode/starcoder",
+    "host": "https://api-inference.huggingface.co/models/bigcode/starcoder",
+    "api_key": "YOUR_HUGGINGFACE_API_KEY",
+    "headers": {
+        "Authorization": "YOUR_HUGGINGFACE_API_KEY",
+        "Content-Type": "application/json"
+    },
+    "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "repetition_penalty": 1.2,
+        "do_sample": true
+    }
 }
 ```
 
