@@ -20,11 +20,11 @@ jobs:
       - name: Get Diff
         id: diff
         run: |
-          git fetch origin ${{ github.base_ref }}
-          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+          git fetch origin "${{ github.base_ref }}"
+          MERGE_BASE=$(git merge-base HEAD "origin/${{ github.base_ref }}")
           # Encode the diff as base64 to preserve all characters
-          DIFF=$(git diff $MERGE_BASE..HEAD | base64 -w 0)
-          echo "diff=$DIFF" >> $GITHUB_OUTPUT
+          DIFF=$(git diff "$MERGE_BASE"..HEAD | base64 -w 0)
+          echo "diff=$DIFF" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b #v5.0.3
         with:
           python-version: "3.11"
