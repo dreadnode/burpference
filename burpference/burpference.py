@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # type: ignore[import]
 from burp import IBurpExtender, ITab, IHttpListener
-from java.awt import BorderLayout, GridBagLayout, GridBagConstraints, Font
+from java.awt import BorderLayout, GridBagLayout, GridBagConstraints, Font, Window, Container, Toolkit, AWTEvent
+from java.awt.event import KeyEvent, AWTEventListener
 from javax.swing import (
     JPanel, JTextArea, JScrollPane,
     BorderFactory, JSplitPane, JButton, JComboBox,
@@ -9,11 +10,14 @@ from javax.swing import (
 from javax.swing.table import DefaultTableCellRenderer, TableRowSorter
 from javax.swing.border import TitledBorder
 from java.util import Comparator
+from javax.swing import JFrame, SwingUtilities, JTabbedPane
+from java.lang import System
 import json
 import urllib2
 import os
 from datetime import datetime
 from consts import *
+from api_adapters import get_api_adapter
 from api_adapters import get_api_adapter
 
 
@@ -50,6 +54,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.temp_log_messages = []
         self.request_counter = 0
         self.log_message("Extension initialized and running.")
+        self.key_listener = None
 
     def registerExtenderCallbacks(self, callbacks):
         self._callbacks = callbacks
@@ -291,6 +296,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
         self.promptForConfiguration()
         self.applyDarkTheme(self.tabbedPane)
+
+        # Register keyboard shortcut handler
+        self.registerKeyboardShortcuts()
 
     def getTabCaption(self):
         return "burpference"
@@ -551,7 +559,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
     def log_message(self, message):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = "[{0}] {1}\n".format(timestamp, message)  # Python2 format strings
+        log_entry = "[{0}] {1}\n".format(timestamp, message)
 
         if self.logArea is None:
             self.temp_log_messages.append(log_entry)
@@ -744,7 +752,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
                     self.requestArea.append("\n\n=== Request #" + str(self.request_counter) + " ===\n")
                     try:
-                        # Format the request nicely
                         formatted_request = json.dumps(http_pair, indent=2)
                         formatted_request = formatted_request.replace('\\n', '\n')
                         formatted_request = formatted_request.replace('\\"', '"')
@@ -755,7 +762,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
                     self.responseArea.append("\n\n=== Response #" + str(self.request_counter) + " ===\n")
                     try:
-                        # Format the response nicely
                         if isinstance(processed_response, dict) and 'message' in processed_response and 'content' in processed_response['message']:
                             formatted_response = processed_response['message']['content']
                         else:
@@ -773,7 +779,120 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
     def promptForConfiguration(self):
         JOptionPane.showMessageDialog(
             self._panel,
-            "Select a configuration file to load in the burpference extension"
-            " tab and go brrr",
+            "Select a configuration file to load in the burpference extension tab and go brrr",
             "burpference Configuration Required",
-            JOptionPane.INFORMATION_MESSAGE)
+            JOptionPane.INFORMATION_MESSAGE
+        )
+
+    def registerKeyboardShortcuts(self):
+        """Register keyboard shortcuts for the extension."""
+        try:
+            final_self = self
+
+            class KeyListener(AWTEventListener):
+                def __init__(self, burp_instance):
+                    self.burp = burp_instance
+
+                def eventDispatched(self, event):
+                    if not isinstance(event, KeyEvent):
+                        return
+
+                    if event.getID() != KeyEvent.KEY_PRESSED:
+                        return
+
+                    # Check for Command+Shift+B (Mac) or Ctrl+Shift+B (Windows/Linux)
+                    is_command_or_ctrl = (
+                        event.isMetaDown()  # Command key on Mac
+                        if System.getProperty('os.name').lower().startswith('mac')
+                        else event.isControlDown()  # Ctrl key on Windows/Linux
+                    )
+
+                    if (is_command_or_ctrl and
+                        event.isShiftDown() and
+                        event.getKeyCode() == KeyEvent.VK_B):
+                        event.consume()
+                        final_self.log_message("Shortcut triggered!")
+                        SwingUtilities.invokeLater(lambda: final_self.switchToBurpferenceTab())
+
+            # Create and register the key listener
+            self.key_listener = KeyListener(self)
+            Toolkit.getDefaultToolkit().addAWTEventListener(
+                self.key_listener,
+                AWTEvent.KEY_EVENT_MASK | AWTEvent.WINDOW_EVENT_MASK
+            )
+            self.log_message("Keyboard shortcuts registered successfully")
+
+        except Exception as e:
+            self.log_message("Failed to register keyboard shortcuts: %s" % str(e))
+
+    def switchToBurpferenceTab(self):
+        """Switch to the burpference tab."""
+        try:
+            self.tabbedPane.setSelectedIndex(0)
+            self.log_message("Switched to burpference tab using local pane")
+            return
+        except Exception as e:
+            self.log_message("Failed to switch using local pane: %s" % str(e))
+
+        try:
+            root_container = self.findRootTabbedPane()
+            if root_container:
+                for i in range(root_container.getTabCount()):
+                    title = root_container.getTitleAt(i)
+                    self.log_message("Checking tab: %s" % title)
+                    if title == "burpference":
+                        root_container.setSelectedIndex(i)
+                        self.log_message("Switched to burpference tab using root pane")
+                        break
+        except Exception as e:
+            self.log_message("Error switching to burpference tab: %s" % str(e))
+
+    def findRootTabbedPane(self):
+        """Find Burp's root tabbed pane."""
+        for window in Window.getWindows():
+            if not isinstance(window, JFrame):
+                continue
+
+            # Search in the window's components
+            tabbed_pane = self.findTabbedPane(window)
+            if tabbed_pane and self.isMainTabbedPane(tabbed_pane):
+                return tabbed_pane
+        return None
+
+    def findTabbedPane(self, container):
+        """Recursively search for a JTabbedPane in a container."""
+        if isinstance(container, JTabbedPane):
+            return container
+
+        if hasattr(container, 'getComponents'):
+            for component in container.getComponents():
+                if isinstance(component, Container):
+                    result = self.findTabbedPane(component)
+                    if result:
+                        return result
+        return None
+
+    def isMainTabbedPane(self, tabbed_pane):
+        """Check if this is Burp's main tabbed pane."""
+        tab_count = tabbed_pane.getTabCount()
+        has_proxy = False
+        has_repeater = False
+
+        for i in range(tab_count):
+            title = tabbed_pane.getTitleAt(i)
+            if title == "Proxy":
+                has_proxy = True
+            elif title == "Repeater":
+                has_repeater = True
+
+        return has_proxy and has_repeater
+
+    def extensionUnloaded(self):
+        """Clean up when extension is unloaded."""
+        try:
+            if self.key_listener:
+                Toolkit.getDefaultToolkit().removeAWTEventListener(self.key_listener)
+                self.key_listener = None
+                self.log_message("Keyboard shortcuts unregistered")
+        except Exception as e:
+            self.log_message("Error unregistering keyboard shortcuts: %s" % str(e))
