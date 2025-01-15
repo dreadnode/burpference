@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # type: ignore[import]
-from burp import IBurpExtender, ITab, IHttpListener
+from burp import IBurpExtender, ITab, IHttpListener, IScanIssue
 from java.awt import BorderLayout, GridBagLayout, GridBagConstraints, Font
 from javax.swing import (
     JPanel, JTextArea, JScrollPane,
@@ -15,6 +15,7 @@ import os
 from datetime import datetime
 from consts import *
 from api_adapters import get_api_adapter
+from issues import BurpferenceIssue
 
 
 def load_ascii_art(file_path):
@@ -144,7 +145,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                     n2 = int(s2)
                     return n1 - n2
                 except:
-                    return 0  # Return 0 if conversion fails
+                    return 0
 
         # Add sorting capability
         sorter = TableRowSorter(self.historyTableModel)
@@ -598,6 +599,57 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             for child in component.getComponents():
                 self.applyDarkTheme(child)
 
+    def map_severity(self, ai_severity):
+        """Map burpference model severity levels to Burp's iscan exact severity strings"""
+        severity_map = {
+            "CRITICAL": "High",
+            "HIGH": "High",
+            "MEDIUM": "Medium",
+            "LOW": "Low",
+            "INFORMATIONAL": "Information"
+        }
+        return severity_map.get(ai_severity, "Information")
+
+    def extract_severity_from_response(self, response):
+        """Extract severity level from model response"""
+        for level in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL"]:
+            if "**%s**" % level in response:
+                return level
+        return "INFORMATIONAL"
+
+    def create_scan_issue(self, messageInfo, processed_response):
+        try:
+            severity = self.extract_severity_from_response(processed_response)
+            burp_severity = self.map_severity(severity)
+
+            # Convert response to string and handle escaping
+            if isinstance(processed_response, str):
+                detail = processed_response
+            else:
+                detail = str(processed_response)
+
+            if detail.startswith('"') and detail.endswith('"'):
+                detail = detail[1:-1]  # Remove surrounding quotes
+
+            # Create properly formatted issue name
+            issue_name = "burpference: %s Security Finding" % severity
+
+            issue = BurpferenceIssue(
+                httpService=messageInfo.getHttpService(),
+                url=self._helpers.analyzeRequest(messageInfo).getUrl(),
+                httpMessages=[messageInfo],
+                name=issue_name,
+                detail=detail,
+                severity=burp_severity,
+                confidence="Certain"
+            )
+
+            self._callbacks.addScanIssue(issue)
+            self.log_message("Added %s issue to Burp Scanner" % severity)
+
+        except Exception as e:
+            self.log_message("Error creating scan issue: %s" % str(e))
+
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
         if not self.is_running:
             return
@@ -731,6 +783,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
                 # Only update the main UI if we got a successful response
                 if status == "Success" and self.is_running:
+                    # Create Burp scanner issue
+                    self.create_scan_issue(messageInfo, processed_response)
+
                     # Add to history table with metadata
                     self.historyTableModel.addRow([
                         table_metadata.get("id", ""),
