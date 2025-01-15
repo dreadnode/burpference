@@ -6,7 +6,7 @@ from javax.swing import (
     JPanel, JTextArea, JScrollPane,
     BorderFactory, JSplitPane, JButton, JComboBox,
     JTable, table, ListSelectionModel, JOptionPane, JTextField, JTabbedPane)
-from javax.swing import BoxLayout, JLabel  # Add both BoxLayout and JLabel
+from javax.swing import BoxLayout, JLabel
 from javax.swing.table import DefaultTableCellRenderer, TableRowSorter
 from javax.swing.border import TitledBorder
 from java.util import Comparator
@@ -55,7 +55,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.request_counter = 0
         self.log_message("Extension initialized and running.")
         self._hosts = set()
-        self.scanner = None  # Will initialize after we have callbacks
+        self.scanner = None  # Will initialize after callbacks
 
     def registerExtenderCallbacks(self, callbacks):
         self._callbacks = callbacks
@@ -362,26 +362,26 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             try:
                 with open(config_path, 'r') as config_file:
                     self.config = json.load(config_file)
-                self.log_message("Loaded configuration: %s" %
-                                 json.dumps(self.config, indent=2))
-                try:
-                    self.api_adapter = get_api_adapter(self.config)
-                    # Update scanner's configuration and API adapter
-                    if self.scanner:
-                        self.scanner.config = self.config
-                        self.scanner.api_adapter = self.api_adapter
-                    self.log_message("API adapter initialized successfully")
-                except ValueError as e:
-                    self.log_message("Error initializing API adapter: %s" % str(e))
-                    self.api_adapter = None
-                    if self.scanner:
-                        self.scanner.api_adapter = None
-                except Exception as e:
-                    self.log_message(
-                        "Unexpected error initializing API adapter: %s" % str(e))
-                    self.api_adapter = None
-                    if self.scanner:
-                        self.scanner.api_adapter = None
+                    self.config["config_file"] = selected_config
+
+                    try:
+                        self.api_adapter = get_api_adapter(self.config)
+                        if self.scanner:
+                            self.scanner.config = self.config
+                            self.scanner.api_adapter = self.api_adapter
+                            self.scanner.update_config_display()
+                        self.log_message("API adapter initialized successfully")
+                    except ValueError as e:
+                        self.log_message("Error initializing API adapter: %s" % str(e))
+                        self.api_adapter = None
+                        if self.scanner:
+                            self.scanner.api_adapter = None
+                    except Exception as e:
+                        self.log_message(
+                            "Unexpected error initializing API adapter: %s" % str(e))
+                        self.api_adapter = None
+                        if self.scanner:
+                            self.scanner.api_adapter = None
             except ValueError as e:
                 self.log_message(
                     "Error parsing JSON in configuration file: %s" % str(e))
@@ -634,9 +634,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                 except (ValueError, TypeError):
                     formatted_request = str(request)
 
-                # For response, try to extract the message content if it's a model response
                 try:
-                    # Handle case where response is already a dict
                     if isinstance(response, dict):
                         response_obj = response
                     else:
@@ -735,7 +733,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
     def log_message(self, message):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = "[{0}] {1}\n".format(timestamp, message)  # Python2 format strings
+        log_entry = "[{0}] {1}\n".format(timestamp, message)
 
         if self.logArea is None:
             self.temp_log_messages.append(log_entry)
@@ -745,12 +743,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                 self.logArea.getDocument().getLength())
 
         try:
-            # Try to create/write to log file with explicit permissions
             log_dir = os.path.dirname(self.log_file_path)
             if not os.path.exists(log_dir):
-                os.makedirs(log_dir, 0755)  # Python2 octal notation
+                os.makedirs(log_dir, 0755)
 
-            # Open with explicit write permissions
             with open(self.log_file_path, 'a+') as log_file:
                 log_file.write(log_entry)
         except (IOError, OSError) as e:
@@ -812,7 +808,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                 detail = str(processed_response)
 
             if detail.startswith('"') and detail.endswith('"'):
-                detail = detail[1:-1]  # Remove surrounding quotes
+                detail = detail[1:-1]
 
             # Create properly formatted issue name
             issue_name = "burpference: %s Security Finding" % severity
@@ -996,7 +992,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
                     self.requestArea.append("\n\n=== Request #" + str(self.request_counter) + " ===\n")
                     try:
-                        # Format the request nicely
                         formatted_request = json.dumps(http_pair, indent=2)
                         formatted_request = formatted_request.replace('\\n', '\n')
                         formatted_request = formatted_request.replace('\\"', '"')
@@ -1007,7 +1002,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
                     self.responseArea.append("\n\n=== Response #" + str(self.request_counter) + " ===\n")
                     try:
-                        # Format the response nicely
                         if isinstance(processed_response, dict) and 'message' in processed_response and 'content' in processed_response['message']:
                             formatted_response = processed_response['message']['content']
                         else:

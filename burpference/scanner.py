@@ -11,11 +11,13 @@ from javax.swing import (
     ButtonGroup,
     JRadioButton,
 )
-from java.awt import BorderLayout, FlowLayout
+from java.awt import BorderLayout, FlowLayout, Dimension
+from java.lang import Short
 from threading import Thread
 import json
 import urllib2
 import re
+from javax.swing.border import EmptyBorder
 
 SCANNER_PROMPT = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "prompts", "scanner_prompt.txt"
@@ -35,7 +37,6 @@ class BurpferenceScanner:
         self._last_prompt_content = None
         self._last_openapi_content = None
 
-        # Store theme colors
         self.colors = colors or {}
         self.DARK_BACKGROUND = self.colors.get("DARK_BACKGROUND")
         self.LIGHTER_BACKGROUND = self.colors.get("LIGHTER_BACKGROUND")
@@ -46,7 +47,6 @@ class BurpferenceScanner:
         """Add a host to the scanner's tracked hosts"""
         if host not in self._hosts:
             self._hosts.add(host)
-            # Update domain selector if it exists
             if hasattr(self, "_domain_selector"):
                 self._domain_selector.removeAllItems()
                 for h in sorted(self._hosts):
@@ -55,12 +55,33 @@ class BurpferenceScanner:
     def create_scanner_tab(self):
         """Creates the security analysis scanner tab"""
         panel = JPanel()
-        panel.setLayout(BoxLayout(panel, BoxLayout.Y_AXIS))
+        panel.setLayout(BorderLayout())
         panel.setBackground(self.DARK_BACKGROUND)
 
+        # Create a top container for config and input sections
+        top_container = JPanel()
+        top_container.setLayout(BoxLayout(top_container, BoxLayout.Y_AXIS))
+        top_container.setBackground(self.DARK_BACKGROUND)
+        # Set maximum height for top container to keep it compact
+        top_container.setMaximumSize(Dimension(Short.MAX_VALUE, 300))
+
+        # Config info panel
+        config_info_panel = JPanel(FlowLayout(FlowLayout.LEFT, 5, 2))
+        config_info_panel.setBackground(self.DARK_BACKGROUND)
+        self.config_label = JLabel(self.get_config_status())
+        self.config_label.setForeground(self.DREADNODE_ORANGE)
+        config_info_panel.add(self.config_label)
+        config_info_panel.setMaximumSize(Dimension(Short.MAX_VALUE, 25))
+
         # Target input section
-        target_panel = JPanel(FlowLayout(FlowLayout.LEFT))
+        target_panel = JPanel(FlowLayout(FlowLayout.LEFT, 5, 2))
         target_panel.setBackground(self.DARK_BACKGROUND)
+
+        config_info_panel = JPanel(FlowLayout(FlowLayout.LEFT))
+        config_info_panel.setBackground(self.DARK_BACKGROUND)
+        self.config_label = JLabel(self.get_config_status())
+        self.config_label.setForeground(self.DREADNODE_ORANGE)
+        config_info_panel.add(self.config_label)
 
         # Input type selection
         type_panel = JPanel()
@@ -90,45 +111,52 @@ class BurpferenceScanner:
         target_panel.add(type_panel)
         target_panel.add(target_label)
         target_panel.add(self._target_input)
+        target_panel.setMaximumSize(Dimension(Short.MAX_VALUE, 35))
 
-        # Custom prompt panel
+        # System prompt panel
         prompt_panel = JPanel()
+        prompt_panel.setLayout(BoxLayout(prompt_panel, BoxLayout.Y_AXIS))
         prompt_panel.setBackground(self.DARK_BACKGROUND)
-        prompt_label = JLabel("Custom Analysis Instructions:")
+
+        prompt_desc = JLabel(
+            "Current system prompt for analysis. Modifies the model's behavior and focus areas."
+        )
+        prompt_desc.setForeground(self.DREADNODE_GREY)
+        prompt_label = JLabel("System Prompt:")
         prompt_label.setForeground(self.DREADNODE_GREY)
-        self._custom_prompt = JTextArea(5, 50)
+
+        self._custom_prompt = JTextArea(8, 50)
         self._custom_prompt.setLineWrap(True)
         self._custom_prompt.setWrapStyleWord(True)
         self._custom_prompt.setBackground(self.LIGHTER_BACKGROUND)
         self._custom_prompt.setForeground(self.DREADNODE_ORANGE)
 
-        # Pre-fill with default prompt based on selected type
-        default_prompt = self.load_prompt_template(self.openapi_radio.isSelected())
-        self._custom_prompt.setText(default_prompt)
-
-        # Add listener to update prompt when radio selection changes
-        def update_default_prompt(event):
-            if not self._custom_prompt.getText() or self._custom_prompt.getText() in [
-                self._last_prompt_content,
-                self._last_openapi_content,
-            ]:
-                self._custom_prompt.setText(
-                    self.load_prompt_template(self.openapi_radio.isSelected())
-                )
-
-        self.url_radio.addActionListener(update_default_prompt)
-        self.openapi_radio.addActionListener(update_default_prompt)
+        # Load and set initial prompt content
+        initial_prompt = self.load_prompt_template(self.openapi_radio.isSelected())
+        if initial_prompt:
+            self._custom_prompt.setText(initial_prompt)
+            # Store as last content so we can detect changes
+            if self.openapi_radio.isSelected():
+                self._last_openapi_content = initial_prompt
+            else:
+                self._last_prompt_content = initial_prompt
 
         prompt_scroll = JScrollPane(self._custom_prompt)
+        prompt_scroll.setPreferredSize(Dimension(600, 200))
+        prompt_scroll.setMaximumSize(Dimension(Short.MAX_VALUE, 200))
 
-        # Analyze button
+        # Button panel
+        button_panel = JPanel(FlowLayout(FlowLayout.LEFT))
+        button_panel.setBackground(self.DARK_BACKGROUND)
         scan_button = JButton(
             "Start Security Analysis", actionPerformed=self.analyze_target
         )
         scan_button.setBackground(self.DREADNODE_ORANGE)
         scan_button.setForeground(self.DREADNODE_GREY)
+        button_panel.add(scan_button)
+        button_panel.setMaximumSize(Dimension(Short.MAX_VALUE, 35))
 
-        # Results area
+        # Results area - should take most space
         self._scanner_output = JTextArea(20, 50)
         self._scanner_output.setEditable(False)
         self._scanner_output.setLineWrap(True)
@@ -137,12 +165,18 @@ class BurpferenceScanner:
         self._scanner_output.setForeground(self.DREADNODE_ORANGE)
         scanner_scroll = JScrollPane(self._scanner_output)
 
-        # Layout components
-        panel.add(target_panel)
-        panel.add(prompt_panel)
-        panel.add(prompt_scroll)
-        panel.add(scan_button)
-        panel.add(scanner_scroll)
+        # Layout
+        prompt_panel.add(prompt_desc)
+        prompt_panel.add(prompt_label)
+
+        top_container.add(config_info_panel)
+        top_container.add(target_panel)
+        top_container.add(prompt_panel)
+        top_container.add(prompt_scroll)
+        top_container.add(button_panel)
+
+        panel.add(top_container, BorderLayout.NORTH)
+        panel.add(scanner_scroll, BorderLayout.CENTER)
 
         return panel
 
@@ -320,3 +354,24 @@ class BurpferenceScanner:
         except Exception as e:
             self._callbacks.printOutput("Error loading prompt: {str(e)}")
             return "Analyze for security vulnerabilities:"
+
+    def get_config_status(self):
+        """Get formatted configuration status"""
+        config_name = (
+            os.path.basename(self.config.get("config_file", "No config"))
+            if self.config
+            else "No config loaded"
+        )
+        model_name = self.config.get("model", "Not set") if self.config else "No model"
+        api_type = self.config.get("api_type", "Not set") if self.config else "No API"
+
+        return "Configuration: %s | Model: %s | API: %s" % (
+            config_name,
+            model_name,
+            api_type,
+        )
+
+    def update_config_display(self):
+        """Update the configuration display"""
+        if hasattr(self, "config_label"):
+            self.config_label.setText(self.get_config_status())
