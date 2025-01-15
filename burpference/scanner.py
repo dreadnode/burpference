@@ -1,3 +1,4 @@
+import os
 from javax.swing import (
     JPanel,
     JLabel,
@@ -16,6 +17,13 @@ import json
 import urllib2
 import re
 
+SCANNER_PROMPT = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "prompts", "scanner_prompt.txt"
+)
+OPENAPI_PROMPT = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "prompts", "openapi_prompt.txt"
+)
+
 
 class BurpferenceScanner:
     def __init__(self, callbacks, helpers, config, api_adapter, colors=None):
@@ -24,11 +32,8 @@ class BurpferenceScanner:
         self.config = config
         self.api_adapter = api_adapter
         self._hosts = set()
-
-        # Print debug info during initialization
-        callbacks.printOutput("Scanner initialized with:")
-        callbacks.printOutput("Config: %s" % str(config))
-        callbacks.printOutput("API Adapter: %s" % str(api_adapter))
+        self._last_prompt_content = None
+        self._last_openapi_content = None
 
         # Store theme colors
         self.colors = colors or {}
@@ -96,6 +101,24 @@ class BurpferenceScanner:
         self._custom_prompt.setWrapStyleWord(True)
         self._custom_prompt.setBackground(self.LIGHTER_BACKGROUND)
         self._custom_prompt.setForeground(self.DREADNODE_ORANGE)
+
+        # Pre-fill with default prompt based on selected type
+        default_prompt = self.load_prompt_template(self.openapi_radio.isSelected())
+        self._custom_prompt.setText(default_prompt)
+
+        # Add listener to update prompt when radio selection changes
+        def update_default_prompt(event):
+            if not self._custom_prompt.getText() or self._custom_prompt.getText() in [
+                self._last_prompt_content,
+                self._last_openapi_content,
+            ]:
+                self._custom_prompt.setText(
+                    self.load_prompt_template(self.openapi_radio.isSelected())
+                )
+
+        self.url_radio.addActionListener(update_default_prompt)
+        self.openapi_radio.addActionListener(update_default_prompt)
+
         prompt_scroll = JScrollPane(self._custom_prompt)
 
         # Analyze button
@@ -169,9 +192,7 @@ class BurpferenceScanner:
                     if not content:
                         return
                     prompt = (
-                        custom_prompt
-                        if custom_prompt
-                        else "Analyze this URL for potential security vulnerabilities, common web security issues, and misconfigurations:"
+                        custom_prompt if custom_prompt else self.load_prompt_template()
                     )
 
                 # Prepare request for the model
@@ -265,3 +286,37 @@ class BurpferenceScanner:
         except Exception as e:
             self._scanner_output.setText("Error analyzing URL: {str(e)}")
             return None
+
+    def load_prompt_template(self, is_openapi=False):
+        """Load the appropriate prompt template"""
+        try:
+            prompt_file = OPENAPI_PROMPT if is_openapi else SCANNER_PROMPT
+            if os.path.exists(prompt_file):
+                with open(prompt_file, "r") as f:
+                    content = f.read().strip()
+                    # Track the last loaded content separately for each type
+                    if is_openapi:
+                        if content != self._last_openapi_content:
+                            self._callbacks.printOutput(
+                                "Loaded OpenAPI prompt template"
+                            )
+                            self._last_openapi_content = content
+                    else:
+                        if content != self._last_prompt_content:
+                            self._callbacks.printOutput(
+                                "Loaded scanner prompt template"
+                            )
+                            self._last_prompt_content = content
+                    return content
+            else:
+                if not hasattr(self, "_prompt_missing_logged"):
+                    self._callbacks.printOutput("Prompt file not found: {prompt_file}")
+                    self._prompt_missing_logged = True
+                return (
+                    "Analyze this target for security issues:"
+                    if not is_openapi
+                    else "Analyze this OpenAPI specification for security vulnerabilities:"
+                )
+        except Exception as e:
+            self._callbacks.printOutput("Error loading prompt: {str(e)}")
+            return "Analyze for security vulnerabilities:"
