@@ -19,13 +19,11 @@ jobs:
       # Get the diff first
       - name: Get Diff
         id: diff
-        # shellcheck disable=SC2102
         run: |
-          git fetch origin "${{ github.base_ref }}"
-          MERGE_BASE=$(git merge-base HEAD "origin/${{ github.base_ref }}")
-          # Use separate diff arguments instead of range notation
-          DIFF=$(git diff "$MERGE_BASE" HEAD | base64 --wrap=0)
-          echo "diff=${DIFF}" >> "$GITHUB_OUTPUT"
+          git fetch origin "${GITHUB_BASE_REF}"
+          MERGE_BASE="$(git merge-base HEAD "origin/${GITHUB_BASE_REF}")"
+          DIFF="$(git diff "${MERGE_BASE}" HEAD | base64 --wrap=0)"
+          echo "diff=${DIFF}" >> "${GITHUB_OUTPUT}"
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b #v5.0.3
         with:
           python-version: "3.11"
@@ -50,8 +48,8 @@ jobs:
       - name: Extract PR body
         id: pr
         run: |
-          body=$(gh pr view ${{ github.event.pull_request.number }} --json body --jq .body)
-          echo "body=${body}" >> $GITHUB_OUTPUT
+          PR_BODY="$(gh pr view "${GITHUB_EVENT_PULL_REQUEST_NUMBER}" --json body --jq .body)"
+          echo "body=${PR_BODY}" >> "${GITHUB_OUTPUT}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Update the PR description
