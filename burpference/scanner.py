@@ -357,13 +357,12 @@ class BurpferenceScanner:
 
     def get_config_status(self):
         """Get formatted configuration status"""
-        config_name = (
-            os.path.basename(self.config.get("config_file", "No config"))
-            if self.config
-            else "No config loaded"
-        )
-        model_name = self.config.get("model", "Not set") if self.config else "No model"
-        api_type = self.config.get("api_type", "Not set") if self.config else "No API"
+        if not self.config:
+            return "No configuration loaded - Select a configuration file in the burpference tab"
+
+        config_name = os.path.basename(self.config.get("config_file", "No config"))
+        model_name = self.config.get("model", "Not set")
+        api_type = self.config.get("api_type", "Not set")
 
         return "Configuration: %s | Model: %s | API: %s" % (
             config_name,

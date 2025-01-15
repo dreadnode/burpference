@@ -279,7 +279,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
 
         # Initialize scanner AFTER loading config
         self.scanner = None
-        self.loadInitialConfiguration()
 
         # Now initialize scanner with current config
         colors = {
@@ -291,8 +290,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.scanner = BurpferenceScanner(
             callbacks=self._callbacks,
             helpers=self._helpers,
-            config=self.config,
-            api_adapter=self.api_adapter,
+            config=None,
+            api_adapter=None,
             colors=colors
         )
 
@@ -406,16 +405,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             if self.scanner:
                 self.scanner.config = None
                 self.scanner.api_adapter = None
-
-    def loadInitialConfiguration(self):
-        """Load the first available configuration file"""
-        config_files = self.loadConfigFiles()
-        if config_files:
-            self.configSelector.setSelectedItem(config_files[0])
-            self.loadConfiguration(None)  # None for the event parameter
-            self.log_message("Loaded initial configuration: %s" % config_files[0])
-        else:
-            self.log_message("No configuration files found in %s" % CONFIG_DIR)
 
     def create_inference_logger_tab(self):
         panel = JPanel(BorderLayout())
