@@ -17,7 +17,7 @@ repos:
     hooks:
       - id: actionlint
         name: Check Github Actions
-        args: ["--exclude", "SC2102"]
+        args: ["--ignore", "SC2102"]
 
   # Python code security
   - repo: https://github.com/PyCQA/bandit
