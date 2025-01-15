@@ -364,24 +364,24 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                     self.config = json.load(config_file)
                     self.config["config_file"] = selected_config
 
-                    try:
-                        self.api_adapter = get_api_adapter(self.config)
-                        if self.scanner:
-                            self.scanner.config = self.config
-                            self.scanner.api_adapter = self.api_adapter
-                            self.scanner.update_config_display()
-                        self.log_message("API adapter initialized successfully")
-                    except ValueError as e:
-                        self.log_message("Error initializing API adapter: %s" % str(e))
-                        self.api_adapter = None
-                        if self.scanner:
-                            self.scanner.api_adapter = None
-                    except Exception as e:
-                        self.log_message(
-                            "Unexpected error initializing API adapter: %s" % str(e))
-                        self.api_adapter = None
-                        if self.scanner:
-                            self.scanner.api_adapter = None
+                try:
+                    self.api_adapter = get_api_adapter(self.config)
+                    if self.scanner:
+                        self.scanner.config = self.config
+                        self.scanner.api_adapter = self.api_adapter
+                        self.scanner.update_config_display()
+                    self.log_message("API adapter initialized successfully")
+                except ValueError as e:
+                    self.log_message("Error initializing API adapter: %s" % str(e))
+                    self.api_adapter = None
+                    if self.scanner:
+                        self.scanner.api_adapter = None
+                except Exception as e:
+                    self.log_message(
+                        "Unexpected error initializing API adapter: %s" % str(e))
+                    self.api_adapter = None
+                    if self.scanner:
+                        self.scanner.api_adapter = None
             except ValueError as e:
                 self.log_message(
                     "Error parsing JSON in configuration file: %s" % str(e))

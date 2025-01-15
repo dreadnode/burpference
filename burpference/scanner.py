@@ -371,7 +371,19 @@ class BurpferenceScanner:
             api_type,
         )
 
+    def refresh_prompt_template(self):
+        """Refresh the prompt template when config changes"""
+        if hasattr(self, "_custom_prompt"):
+            initial_prompt = self.load_prompt_template(self.openapi_radio.isSelected())
+            if initial_prompt:
+                self._custom_prompt.setText(initial_prompt)
+                if self.openapi_radio.isSelected():
+                    self._last_openapi_content = initial_prompt
+                else:
+                    self._last_prompt_content = initial_prompt
+
     def update_config_display(self):
-        """Update the configuration display"""
+        """Update the configuration display and refresh prompt"""
         if hasattr(self, "config_label"):
             self.config_label.setText(self.get_config_status())
+            self.refresh_prompt_template()
