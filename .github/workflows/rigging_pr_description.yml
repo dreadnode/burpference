@@ -46,6 +46,14 @@ jobs:
           GIT_DIFF: ${{ steps.diff.outputs.diff }}
         run: |
           python .github/scripts/rigging_pr_decorator.py
+      # Extract PR body
+      - name: Extract PR body
+        id: pr
+        run: |
+          body=$(gh pr view ${{ github.event.pull_request.number }} --json body --jq .body)
+          echo "body=${body}" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Update the PR description
       - name: Update PR Description
         uses: nefrob/pr-description@4dcc9f3ad5ec06b2a197c5f8f93db5e69d2fdca7 #v1.2.0

@@ -43,6 +43,8 @@ Some key features:
 - **Comprehensive Logging**: A logging system allows you to review intercepted responses, API requests sent, and replies received—all clearly displayed for analysis.
   - A clean table interface displaying all logs, intercepted responses, API calls, and status codes for comprehensive engagement tracking.
   - Stores inference logs in both the "_Inference Logger_" tab as a live preview and a timestamped file in the /logs directory.
+- **Native Burp Reporting**: burpference' system prompt invokes the model to make an assessment based on severity level of the finding which is color-coded (a heatmap related to the severity level) in the extenstion tab.
+  - Additionally, burpference "findings" are created as issues in the Burp Scanner navigation bar available across all tabs in the Burp UI.
 - **Flexible Configuration**: Customize system prompts, API keys, or remote hosts as needed. Use your own configuration files for seamless integration with your workflow.
   - Supports custom configurations, allowing you to load and switch between system prompts, API keys, and remote hosts
   - [Several examples](configs/README.md) are provided in the repository, and contributions for additional provider plugins are welcome.
