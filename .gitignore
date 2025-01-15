@@ -1,20 +1,70 @@
-.DS_Store
+### Project Specific ###
+# burpference logs and local config
 logs/
-.idea/workspace.xml
+.burpference/
+configs/*
+!configs/*.example.json
+prompt.txt
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.env/
+.venv/
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# IDE specific files
+.idea/
 .vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+
+# Debug files
+*.debug
+
+# Local development
+local_settings.py
+*.local.json
+*.local.py
+
+# Security related
+*.key
+*.pem
+*.cert
+*.password
+*.token
 .env
-archive/autogpt/.gradle/*
-archive/autogpt/.gradle/buildOutputCleanup/cache.properties
-.lock
+.secret
 
-# Ignore Gradle project-specific cache directory
-.gradle
+# Java/Burp related
+*.class
+*.jar
+!lib/*.jar  # Keep vendored jar files if needed
 
-# Ignore Gradle build output directory
-build
-
-# Ignore $py.class files (generated when running burp)
-
-.*$py.*class
-burpference/api_adapters$py.class
-burpference/consts$py.class
+# Docs build
+docs/_build/
