@@ -23,6 +23,7 @@ class BurpferenceScanner:
         self._helpers = helpers
         self.config = config
         self.api_adapter = api_adapter
+        self._hosts = set()
 
         # Print debug info during initialization
         callbacks.printOutput("Scanner initialized with:")
@@ -35,6 +36,16 @@ class BurpferenceScanner:
         self.LIGHTER_BACKGROUND = self.colors.get("LIGHTER_BACKGROUND")
         self.DREADNODE_GREY = self.colors.get("DREADNODE_GREY")
         self.DREADNODE_ORANGE = self.colors.get("DREADNODE_ORANGE")
+
+    def add_host(self, host):
+        """Add a host to the scanner's tracked hosts"""
+        if host not in self._hosts:
+            self._hosts.add(host)
+            # Update domain selector if it exists
+            if hasattr(self, "_domain_selector"):
+                self._domain_selector.removeAllItems()
+                for h in sorted(self._hosts):
+                    self._domain_selector.addItem(h)
 
     def create_scanner_tab(self):
         """Creates the security analysis scanner tab"""
