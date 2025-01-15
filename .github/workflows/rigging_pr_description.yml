@@ -19,6 +19,7 @@ jobs:
       # Get the diff first
       - name: Get Diff
         id: diff
+        # shellcheck disable=SC2102
         run: |
           git fetch origin "${GITHUB_BASE_REF}"
           MERGE_BASE="$(git merge-base HEAD "origin/${GITHUB_BASE_REF}")"
