@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # type: ignore[import]
 from burp import IBurpExtender, ITab, IHttpListener, IScanIssue
-from java.awt import BorderLayout, GridBagLayout, GridBagConstraints, Font
+from java.awt import BorderLayout, GridBagLayout, GridBagConstraints, Font, Dimension
 from javax.swing import (
     JPanel, JTextArea, JScrollPane,
     BorderFactory, JSplitPane, JButton, JComboBox,
     JTable, table, ListSelectionModel, JOptionPane, JTextField, JTabbedPane)
+from javax.swing import BoxLayout, JLabel  # Add both BoxLayout and JLabel
 from javax.swing.table import DefaultTableCellRenderer, TableRowSorter
 from javax.swing.border import TitledBorder
 from java.util import Comparator
@@ -16,6 +17,8 @@ from datetime import datetime
 from consts import *
 from api_adapters import get_api_adapter
 from issues import BurpferenceIssue
+from threading import Thread
+from scanner import BurpferenceScanner
 
 
 def load_ascii_art(file_path):
@@ -51,6 +54,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.temp_log_messages = []
         self.request_counter = 0
         self.log_message("Extension initialized and running.")
+        self._hosts = set()
+        self.scanner = None  # Will initialize after we have callbacks
 
     def registerExtenderCallbacks(self, callbacks):
         self._callbacks = callbacks
@@ -264,11 +269,35 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self._panel.add(diffSplitPane, BorderLayout.NORTH)
 
         self.inference_tab = self.create_inference_logger_tab()
+        self.scanner_tab = self.create_scanner_tab()
+
         self.tabbedPane = JTabbedPane()
         self.tabbedPane.setBackground(DARK_BACKGROUND)
         self.tabbedPane.setForeground(DREADNODE_GREY)
         self.tabbedPane.addTab("burpference", self._panel)
         self.tabbedPane.addTab("Inference Logger", self.inference_tab)
+
+        # Initialize scanner AFTER loading config
+        self.scanner = None
+        self.loadInitialConfiguration()
+
+        # Now initialize scanner with current config
+        colors = {
+            'DARK_BACKGROUND': DARK_BACKGROUND,
+            'LIGHTER_BACKGROUND': LIGHTER_BACKGROUND,
+            'DREADNODE_GREY': DREADNODE_GREY,
+            'DREADNODE_ORANGE': DREADNODE_ORANGE
+        }
+        self.scanner = BurpferenceScanner(
+            callbacks=self._callbacks,
+            helpers=self._helpers,
+            config=self.config,
+            api_adapter=self.api_adapter,
+            colors=colors
+        )
+
+        self.scanner_tab = self.scanner.create_scanner_tab()
+        self.tabbedPane.addTab("Scanner", self.scanner_tab)
 
         for i in range(self.tabbedPane.getTabCount()):
             self.tabbedPane.setBackgroundAt(i, DREADNODE_GREY)
@@ -337,29 +366,56 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                                  json.dumps(self.config, indent=2))
                 try:
                     self.api_adapter = get_api_adapter(self.config)
+                    # Update scanner's configuration and API adapter
+                    if self.scanner:
+                        self.scanner.config = self.config
+                        self.scanner.api_adapter = self.api_adapter
                     self.log_message("API adapter initialized successfully")
                 except ValueError as e:
                     self.log_message("Error initializing API adapter: %s" % str(e))
                     self.api_adapter = None
+                    if self.scanner:
+                        self.scanner.api_adapter = None
                 except Exception as e:
                     self.log_message(
                         "Unexpected error initializing API adapter: %s" % str(e))
                     self.api_adapter = None
+                    if self.scanner:
+                        self.scanner.api_adapter = None
             except ValueError as e:
                 self.log_message(
                     "Error parsing JSON in configuration file: %s" % str(e))
                 self.config = None
                 self.api_adapter = None
+                if self.scanner:
+                    self.scanner.config = None
+                    self.scanner.api_adapter = None
             except Exception as e:
                 self.log_message(
                     "Unexpected error loading configuration: %s" % str(e))
                 self.config = None
                 self.api_adapter = None
+                if self.scanner:
+                    self.scanner.config = None
+                    self.scanner.api_adapter = None
         else:
             self.log_message(
                 "Configuration file %s not found." % selected_config)
             self.config = None
             self.api_adapter = None
+            if self.scanner:
+                self.scanner.config = None
+                self.scanner.api_adapter = None
+
+    def loadInitialConfiguration(self):
+        """Load the first available configuration file"""
+        config_files = self.loadConfigFiles()
+        if config_files:
+            self.configSelector.setSelectedItem(config_files[0])
+            self.loadConfiguration(None)  # None for the event parameter
+            self.log_message("Loaded initial configuration: %s" % config_files[0])
+        else:
+            self.log_message("No configuration files found in %s" % CONFIG_DIR)
 
     def create_inference_logger_tab(self):
         panel = JPanel(BorderLayout())
@@ -433,6 +489,133 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         panel.add(mainSplitPane, BorderLayout.CENTER)
 
         return panel
+
+    def create_scanner_tab(self):
+        """Creates the burpference scanner tab with domain filtering and direct model interaction"""
+        panel = JPanel()
+        panel.setLayout(BoxLayout(panel, BoxLayout.Y_AXIS))
+        panel.setBackground(DARK_BACKGROUND)
+
+        # Create top control panel
+        top_panel = JPanel()
+        top_panel.setLayout(BoxLayout(top_panel, BoxLayout.X_AXIS))
+        top_panel.setBackground(DARK_BACKGROUND)
+
+        # Domain selector
+        domain_panel = JPanel()
+        domain_panel.setBackground(DARK_BACKGROUND)
+        domain_label = JLabel("Target Domain:")
+        domain_label.setForeground(DREADNODE_GREY)
+        self._domain_selector = JComboBox(list(self._hosts))
+        self._domain_selector.setBackground(LIGHTER_BACKGROUND)
+        self._domain_selector.setForeground(DREADNODE_GREY)
+        domain_panel.add(domain_label)
+        domain_panel.add(self._domain_selector)
+        top_panel.add(domain_panel)
+
+        # Optional prompt input
+        middle_panel = JPanel()
+        middle_panel.setBackground(DARK_BACKGROUND)
+        middle_panel.setLayout(BoxLayout(middle_panel, BoxLayout.Y_AXIS))
+        prompt_label = JLabel("Custom Analysis Prompt:")
+        prompt_label.setForeground(DREADNODE_GREY)
+        self._custom_prompt = JTextArea(5, 50)
+        self._custom_prompt.setLineWrap(True)
+        self._custom_prompt.setWrapStyleWord(True)
+        self._custom_prompt.setBackground(LIGHTER_BACKGROUND)
+        self._custom_prompt.setForeground(DREADNODE_ORANGE)
+        prompt_scroll = JScrollPane(self._custom_prompt)
+
+        # Analyze button
+        analyze_button = JButton("Analyze Domain", actionPerformed=self.analyze_domain)
+        analyze_button.setBackground(DREADNODE_ORANGE)
+        analyze_button.setForeground(DREADNODE_GREY)
+
+        middle_panel.add(prompt_label)
+        middle_panel.add(prompt_scroll)
+        middle_panel.add(analyze_button)
+
+        # Results area
+        self._scanner_output = JTextArea(20, 50)
+        self._scanner_output.setEditable(False)
+        self._scanner_output.setLineWrap(True)
+        self._scanner_output.setWrapStyleWord(True)
+        self._scanner_output.setBackground(LIGHTER_BACKGROUND)
+        self._scanner_output.setForeground(DREADNODE_ORANGE)
+        scanner_scroll = JScrollPane(self._scanner_output)
+
+        # Add all components
+        panel.add(top_panel)
+        panel.add(middle_panel)
+        panel.add(scanner_scroll)
+
+        return panel
+
+    def analyze_domain(self, event):
+        """Handles the domain analysis button click"""
+        domain = self._domain_selector.getSelectedItem()
+        custom_prompt = self._custom_prompt.getText()
+
+        def run_analysis():
+            self._scanner_output.setText("Analyzing domain: %s...\n" % domain)
+            try:
+                # Get all requests for selected domain
+                http_pairs = self.get_domain_traffic(domain)
+                if not http_pairs:
+                    self._scanner_output.append("\nNo traffic found for domain.")
+                    return
+
+                # Use custom prompt if provided, otherwise use default
+                prompt = custom_prompt if custom_prompt else "Analyze this domain's traffic for security issues:"
+
+                # Prepare and send to current model
+                analysis_request = self.api_adapter.prepare_request(
+                    user_content=json.dumps(http_pairs, indent=2),
+                    system_content=prompt
+                )
+
+                # Make request and process response
+                req = urllib2.Request(self.config.get("host", ""))
+                for header, value in self.config.get("headers", {}).items():
+                    req.add_header(header, value)
+
+                response = urllib2.urlopen(req, json.dumps(analysis_request))
+                response_data = response.read()
+                analysis = self.api_adapter.process_response(response_data)
+
+                # Update UI
+                self._scanner_output.setText("Analysis for %s:\n\n%s" % (domain, analysis))
+
+            except Exception as e:
+                self._scanner_output.setText("Error analyzing domain: %s" % str(e))
+
+        # Run analysis in background thread
+        Thread(target=run_analysis).start()
+
+    def get_domain_traffic(self, domain):
+        """Gets all traffic for a specific domain"""
+        traffic = []
+        for message in self._callbacks.getProxyHistory():
+            if domain in message.getHttpService().getHost():
+                analyzed_request = self._helpers.analyzeRequest(message)
+                analyzed_response = self._helpers.analyzeResponse(message.getResponse())
+
+                # Extract request/response data
+                request_info = {
+                    "method": analyzed_request.getMethod(),
+                    "url": str(message.getUrl()),
+                    "headers": dict(header.split(': ', 1) for header in analyzed_request.getHeaders()[1:] if ': ' in header),
+                    "body": message.getRequest()[analyzed_request.getBodyOffset():].tostring()
+                }
+
+                response_info = {
+                    "status": analyzed_response.getStatusCode(),
+                    "headers": dict(header.split(': ', 1) for header in analyzed_response.getHeaders()[1:] if ': ' in header),
+                    "body": message.getResponse()[analyzed_response.getBodyOffset():].tostring()
+                }
+
+                traffic.append({"request": request_info, "response": response_info})
+        return traffic
 
     def inferenceLogSelectionChanged(self, event):
         selectedRow = self.inferenceLogTable.getSelectedRow()
@@ -651,6 +834,13 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             self.log_message("Error creating scan issue: %s" % str(e))
 
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
+        if messageIsRequest:
+            # Add new domains to both main extension and scanner
+            host = messageInfo.getHttpService().getHost()
+            if host not in self._hosts:
+                self._hosts.add(host)
+                if self.scanner:
+                    self.scanner.add_host(host)
         if not self.is_running:
             return
         if not self.api_adapter:
@@ -661,6 +851,13 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         if messageIsRequest:
             # Store the request for later use
             self.current_request = messageInfo
+            host = messageInfo.getHttpService().getHost()
+            if host not in self._hosts:
+                self._hosts.add(host)
+                if hasattr(self, '_domain_selector'):
+                    self._domain_selector.addItem(host)
+            if self.scanner:
+                self.scanner.add_host(host)
         else:
             request = self.current_request
             response = messageInfo
