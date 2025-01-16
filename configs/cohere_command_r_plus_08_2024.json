@@ -1,0 +1,11 @@
+{
+    "api_type": "cohere",
+    "headers": {
+        "Authorization": "bearer CO_API_KEY",
+        "accept": "application/json",
+        "content-type": "application/json"
+    },
+    "host": "https://api.cohere.com/v2/chat",
+    "model": "command-r-plus-08-2024",
+    "stream": false
+}
