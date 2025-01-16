@@ -275,6 +275,63 @@ class HuggingFaceAPIAdapter(BaseAPIAdapter):
         return str(response)
 
 
+# Cohere /v2/chat API adapter class
+class CohereAPIAdapter(BaseAPIAdapter):
+    def prepare_request(self, user_content, system_content=None):
+        messages = []
+        if system_content:
+            messages.append(
+                {
+                    "role": "SYSTEM",
+                    "content": system_content,
+                }
+            )
+        messages.append(
+            {
+                "role": "USER",
+                "content": user_content,
+            }
+        )
+
+        return {
+            "model": self.config.get("model", "command-r-plus-08-2024"),
+            "messages": messages,
+            "stream": self.config.get("stream", False),
+        }
+
+    def process_response(self, response_data):
+        response = json.loads(response_data)
+        if "text" in response:
+            return response["text"]
+        elif "response" in response and "text" in response["response"]:
+            return response["response"]["text"]
+        else:
+            raise ValueError("Unexpected response format: %s" % str(response))
+
+    def send_request(self, request_payload):
+        headers = self.config.get("headers", {})
+        if not headers:
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "Authorization": "Bearer %s" % self.config.get("api_key", ""),
+            }
+
+        encoded_data = json.dumps(request_payload).encode("utf-8")
+        req = urllib2.Request(
+            self.config.get("host"), data=encoded_data, headers=headers
+        )
+
+        try:
+            response = urllib2.urlopen(req)
+            return response.read()
+        except urllib2.HTTPError as e:
+            error_message = e.read().decode("utf-8")
+            raise ValueError("HTTP Error %d: %s" % (e.code, error_message))
+        except Exception as e:
+            raise ValueError("Error sending request: %s" % str(e))
+
+
 # Generic other API base adapter
 
 
@@ -295,7 +352,9 @@ def get_api_adapter(config):
     api_type = config.get("api_type", "").lower()
     endpoint = config.get("host", "").lower()
 
-    if api_type == "ollama":
+    if api_type == "cohere":
+        return CohereAPIAdapter(config)
+    elif api_type == "ollama":
         if "/generate" in endpoint:
             return OllamaGenerateAPIAdapter(config)
         elif "/chat" in endpoint:

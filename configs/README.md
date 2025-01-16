@@ -17,6 +17,8 @@ If you intend to fork or contribute to burpference, ensure that you have exclude
     - [Example OpenAI `/completions` inference with `gpt-4o-mini`:](#example-openai-completions-inference-with-gpt-4o-mini)
   - [HuggingFace Serveless Inference](#huggingface-serveless-inference)
     - [Example HuggingFace `/text-generation` inference](#example-huggingface-text-generation-inference)
+  - [Cohere `/v2/chat` Inference](#cohere-v2chat-inference)
+    - [Example Cohere `/v2/chat` inference](#example-cohere-v2chat-inference)
 - [Model System Prompts](#model-system-prompts)
 
 ---
@@ -122,9 +124,26 @@ In order to serve inference as part of burpference, the model must be running on
 }
 ```
 
+### Cohere `/v2/chat` Inference
+
+#### Example Cohere `/v2/chat` inference
+
+```json
+{
+    "api_type": "cohere",
+    "headers": {
+        "Authorization": "bearer CO_API_KEY",
+        "accept": "application/json",
+        "content-type": "application/json"
+    },
+    "host": "https://api.cohere.com/v2/chat",
+    "model": "command-r-plus-08-2024",
+    "stream": false
+}
+```
+
 ## Model System Prompts
 
-By default, the system prompt sent as pretext to the model is defined [here](../prompts/proxy_prompt.txt), feel free to edit, tune and tweak as you see fit.
-
+By default, the system prompt sent as pretext to the model is defined [here](../prompts/proxy_prompt.txt), feel free to edit, tune and tweak as you see fit. This is also true for the scanner extension tab.
 
 ---

@@ -2,8 +2,7 @@
 # burpference logs and local config
 logs/
 .burpference/
-configs/*
-!configs/*.example.json
+configs/*_local.json  # Only ignore files with _local suffix
 prompt.txt
 
 ### Python ###
