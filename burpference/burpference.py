@@ -819,6 +819,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             self.log_message("Error creating scan issue: %s" % str(e))
 
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
+        # Check if URL is in scope before processing
+        if not self._callbacks.isInScope(self._helpers.analyzeRequest(messageInfo).getUrl()):
+            return
+
         if messageIsRequest:
             # Add new domains to both main extension and scanner
             host = messageInfo.getHttpService().getHost()
