@@ -10,6 +10,7 @@ from javax.swing import (
     JTextField,
     ButtonGroup,
     JRadioButton,
+    JCheckBox,
 )
 from java.awt import BorderLayout, FlowLayout, Dimension
 from java.lang import Short
@@ -112,6 +113,13 @@ class BurpferenceScanner:
         target_panel.add(type_panel)
         target_panel.add(target_label)
         target_panel.add(self._target_input)
+
+        # Add redirect checkbox after target input
+        self.follow_redirects = JCheckBox("Follow Redirects", True)
+        self.follow_redirects.setBackground(self.DARK_BACKGROUND)
+        self.follow_redirects.setForeground(self.DREADNODE_ORANGE)
+        target_panel.add(self.follow_redirects)
+
         target_panel.setMaximumSize(Dimension(Short.MAX_VALUE, 35))
 
         # System prompt panel
@@ -368,38 +376,66 @@ class BurpferenceScanner:
             if not re.match(r"^https?://", url):
                 url = "http://" + url
 
+            opener = urllib2.build_opener()
+            if not self.follow_redirects.isSelected():
+                # Don't follow redirects if checkbox is unchecked
+                opener.handler_order = dict(
+                    [(h, i) for i, h in enumerate(opener.handlers)]
+                )
+                no_redirect_handler = urllib2.HTTPRedirectHandler()
+                no_redirect_handler.max_redirections = 0
+                opener.handlers = [
+                    h
+                    for h in opener.handlers
+                    if not isinstance(h, urllib2.HTTPRedirectHandler)
+                ]
+
             req = urllib2.Request(url)
-            response = urllib2.urlopen(req)
+            try:
+                response = opener.open(req)
+                final_url = response.geturl()  # Get final URL after redirects
 
-            # Gather information about the target
-            headers = dict(response.info().items())
-            content = response.read()
+                # Gather information about the target
+                headers = dict(response.info().items())
+                content = response.read()
 
-            security_info = {
-                "url": url,
-                "status_code": response.getcode(),
-                "headers": headers,
-                "server_info": headers.get("server", "Unknown"),
-                "security_headers": {
-                    "x-frame-options": headers.get("x-frame-options", "Not Set"),
-                    "content-security-policy": headers.get(
-                        "content-security-policy", "Not Set"
-                    ),
-                    "strict-transport-security": headers.get(
-                        "strict-transport-security", "Not Set"
-                    ),
-                    "x-xss-protection": headers.get("x-xss-protection", "Not Set"),
-                    "x-content-type-options": headers.get(
-                        "x-content-type-options", "Not Set"
-                    ),
-                },
-                "response_size": len(content),
-            }
+                security_info = {
+                    "initial_url": url,
+                    "final_url": final_url,
+                    "redirected": final_url != url,
+                    "status_code": response.getcode(),
+                    "headers": headers,
+                    "server_info": headers.get("server", "Unknown"),
+                    "security_headers": {
+                        "x-frame-options": headers.get("x-frame-options", "Not Set"),
+                        "content-security-policy": headers.get(
+                            "content-security-policy", "Not Set"
+                        ),
+                        "strict-transport-security": headers.get(
+                            "strict-transport-security", "Not Set"
+                        ),
+                        "x-xss-protection": headers.get("x-xss-protection", "Not Set"),
+                        "x-content-type-options": headers.get(
+                            "x-content-type-options", "Not Set"
+                        ),
+                    },
+                    "response_size": len(content),
+                }
 
-            return security_info
+                return security_info
+
+            except urllib2.HTTPError as e:
+                # Handle HTTP errors (like 301, 302 etc) when not following redirects
+                security_info = {
+                    "initial_url": url,
+                    "error": "HTTP Error %d: %s" % (e.code, e.reason),
+                    "status_code": e.code,
+                    "headers": dict(e.headers.items()),
+                }
+                return security_info
 
         except Exception as e:
-            self._scanner_output.setText("Error analyzing URL: {str(e)}")
+            self._scanner_output.setText("Error analyzing URL: %s" % str(e))
             return None
 
     def load_prompt_template(self, is_openapi=False):
