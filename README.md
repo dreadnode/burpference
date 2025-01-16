@@ -6,7 +6,7 @@ Experimenting with yarrr' Burp Proxy tab going brrrrrrrrrrrrr.
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/dreadnode/burpference)](https://github.com/dreadnode/burpference/releases)
 [![GitHub stars](https://img.shields.io/github/stars/dreadnode/burpference?style=social)](https://github.com/dreadnode/burpference/stargazers)
-[![GitHub license](https://img.shields.io/github/license/dreadnode/burpference)](https://github.com/dreadnode/burpference/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/dreadnode/burpference)](https://img.shields.io/github/license/dreadnode/burpference)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dreadnode/burpference/pulls)
 
 •
@@ -40,6 +40,14 @@ Some key features:
   - Only in-scope items are sent, optimizing resource usage and avoiding unnecessary API calls.
   - By default, [certain MIME types are excluded](https://github.com/dreadnode/burpference/blob/7e81641e263bbdfe4a38e30746eb3c27f3454190/burpference/burpference.py#L616).
   - Color-coded tabs display `critical/high/medium/low/informational` findings from your model for easy visualization.
+- **Scanner Analysis**: A dedicated scanner tab provides focused security analysis capabilities:
+  - Direct analysis of URLs and OpenAPI specifications
+  - Load the configuration files using the API adapter, the same as usual in burpference for efficient management of API keys/model selection etc
+  - Automated extraction of security headers and server information
+  - Real-time security header assessment (X-Frame-Options, CSP, HSTS, etc.)
+  - Custom system prompts for specialized analysis scenarios
+  - Support for both single-endpoint and full domain scanning
+  - Integration with Burp's native issue reporting system
 - **Comprehensive Logging**: A logging system allows you to review intercepted responses, API requests sent, and replies received—all clearly displayed for analysis.
   - A clean table interface displaying all logs, intercepted responses, API calls, and status codes for comprehensive engagement tracking.
   - Stores inference logs in both the "_Inference Logger_" tab as a live preview and a timestamped file in the /logs directory.

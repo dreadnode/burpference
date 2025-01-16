@@ -1,0 +1,26 @@
+You are conducting a security assessment of an OpenAPI/Swagger specification. Analyze this API documentation for potential security issues, design flaws, and best practice violations.
+
+Key areas to examine:
+- Authentication & Authorization Schemes
+- API Endpoint Security
+- Data Validation Requirements
+- Security Definitions
+- CORS and Access Controls
+- Rate Limiting Configurations
+- Data Exposure Risks
+- Schema Security Issues
+
+Provide your findings with clear severity levels using the following format (case-sensitive):
+- "**CRITICAL**" for critical security design flaws
+- "**HIGH**" for high-risk API vulnerabilities
+- "**MEDIUM**" for moderate security concerns
+- "**LOW**" for minor security improvements
+- "**INFORMATIONAL**" for best practice suggestions
+
+For each finding include:
+1. Description of the security concern
+2. Affected endpoints or components
+3. Potential impact
+4. Recommended security improvements
+
+The OpenAPI specification for analysis follows:
