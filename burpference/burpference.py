@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # type: ignore[import]
+from datetime import datetime
 from burp import IBurpExtender, ITab, IHttpListener, IScanIssue
 from java.awt import BorderLayout, GridBagLayout, GridBagConstraints, Font, Dimension
 from javax.swing import (
@@ -13,7 +14,6 @@ from java.util import Comparator
 import json
 import urllib2
 import os
-from datetime import datetime
 from consts import *
 from api_adapters import get_api_adapter
 from issues import BurpferenceIssue

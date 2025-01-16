@@ -17,6 +17,7 @@ from threading import Thread
 import json
 import urllib2
 import re
+from datetime import datetime
 from javax.swing.border import EmptyBorder
 
 SCANNER_PROMPT = os.path.join(
@@ -243,16 +244,96 @@ class BurpferenceScanner:
                 response_data = response.read()
                 analysis = self.api_adapter.process_response(response_data)
 
+                # Log to inference logger if available
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                try:
+                    extension_listeners = self._callbacks.getExtensionStateListeners()
+                    if extension_listeners and len(extension_listeners) > 0:
+                        main_extension = extension_listeners[0]
+                        if hasattr(main_extension, "inferenceLogTableModel"):
+                            main_extension.inferenceLogTableModel.addRow(
+                                [
+                                    timestamp,
+                                    self.config.get("host", ""),
+                                    json.dumps(analysis_request),
+                                    analysis,
+                                    "Success",
+                                ]
+                            )
+                except Exception as e:
+                    self._callbacks.printOutput(
+                        "Warning: Could not log to inference logger: %s" % str(e)
+                    )
+
+                # Create scanner issue for findings
+                if (
+                    "**CRITICAL**" in analysis
+                    or "**HIGH**" in analysis
+                    or "**MEDIUM**" in analysis
+                    or "**LOW**" in analysis
+                    or "**INFORMATIONAL**" in analysis
+                ):
+                    from issues import BurpferenceIssue
+                    from java.net import URL
+
+                    severity = "Information"
+                    for level in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL"]:
+                        if "**%s**" % level in analysis:
+                            severity = (
+                                "High"
+                                if level in ["CRITICAL", "HIGH"]
+                                else level.capitalize()
+                            )
+                            break
+
+                        url = URL(target)
+                        protocol = url.getProtocol()
+                        host = url.getHost()
+                        port = url.getPort()
+                        if port == -1:  # No port specified
+                            port = 443 if protocol == "https" else 80
+
+                        issue = BurpferenceIssue(
+                            httpService=self._helpers.buildHttpService(
+                                host, port, protocol == "https"
+                            ),
+                            url=url,
+                            httpMessages=[],
+                            name="burpference Scanner: %s Finding" % level,
+                            detail=analysis,
+                            severity=severity,
+                            confidence="Certain",
+                        )
+                        self._callbacks.addScanIssue(issue)
+
                 self._scanner_output.setText(
                     "Security Analysis for %s:\n\n%s" % (target, analysis)
                 )
 
-            except urllib2.URLError as e:
-                self._scanner_output.setText("Error connecting to target: %s" % str(e))
-            except ValueError as e:
-                self._scanner_output.setText("Error processing response: %s" % str(e))
             except Exception as e:
-                self._scanner_output.setText("Error during analysis: %s" % str(e))
+                error_msg = "Error during analysis: %s" % str(e)
+                self._scanner_output.setText(error_msg)
+                self._callbacks.printOutput(error_msg)
+                try:
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    extension_listeners = self._callbacks.getExtensionStateListeners()
+                    if extension_listeners and len(extension_listeners) > 0:
+                        main_extension = extension_listeners[0]
+                        if hasattr(main_extension, "inferenceLogTableModel"):
+                            main_extension.inferenceLogTableModel.addRow(
+                                [
+                                    timestamp,
+                                    self.config.get("host", ""),
+                                    "Scanner Analysis Request",
+                                    "Error: %s" % str(e),
+                                    "Failed",
+                                ]
+                            )
+                except Exception as log_error:
+                    self._callbacks.printOutput(
+                        "Warning: Could not log error to inference logger: %s"
+                        % str(log_error)
+                    )
 
         Thread(target=run_analysis).start()
 
