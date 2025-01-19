@@ -1,6 +1,14 @@
 # burpference
 
-Experimenting with yarrr' Burp Proxy tab going brrrrrrrrrrrrr.
+<p align="center">
+    <img
+    src="https://d1lppblt9t2x15.cloudfront.net/logos/5714928f3cdc09503751580cffbe8d02.png"
+    alt="Logo"
+    align="center"
+    width="144px"
+    height="144px"
+    />
+</p>
 
 <div align="center">
 
@@ -9,8 +17,7 @@ Experimenting with yarrr' Burp Proxy tab going brrrrrrrrrrrrr.
 [![GitHub license](https://img.shields.io/github/license/dreadnode/burpference)](https://img.shields.io/github/license/dreadnode/burpference)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dreadnode/burpference/pulls)
 
-•
-[Report Bug](https://github.com/dreadnode/burpference/issues) •
+Experimenting with yarrr' Burp Proxy tab going brrrrrrrrrrrrr.
 
 </div>
 
