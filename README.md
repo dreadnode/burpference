@@ -14,7 +14,7 @@
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/dreadnode/burpference)](https://github.com/dreadnode/burpference/releases)
 [![GitHub stars](https://img.shields.io/github/stars/dreadnode/burpference?style=social)](https://github.com/dreadnode/burpference/stargazers)
-[![License](https://img.shields.io/github/license/dreadnode/burpference)](https://github.com/dreadnode/burpference/blob/main/LICENSE.txt)
+[![License](https://img.shields.io/github/license/dreadnode/burpference?branch=main)](https://github.com/dreadnode/burpference/blob/main/LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dreadnode/burpference/pulls)
 
 Experimenting with yarrr' Burp Proxy tab going brrrrrrrrrrrrr.
