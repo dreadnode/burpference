@@ -92,7 +92,42 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.configSelector.setForeground(DREADNODE_GREY)
         self.configSelector.addActionListener(self.loadConfiguration)
         c.gridy += 1
-        inputPanel.add(self.configSelector, c)
+
+        # Create a panel for config controls
+        config_panel = JPanel()
+        config_panel.setBackground(DARK_BACKGROUND)
+        configLabel = JLabel("Configuration File: ")
+        configLabel.setForeground(DREADNODE_GREY)
+        config_panel.add(configLabel)
+        config_panel.add(self.configSelector)
+        inputPanel.add(config_panel, c)
+
+        # Create new prompt selector panel
+        c.gridy += 1
+        prompt_panel = JPanel()
+        prompt_panel.setBackground(DARK_BACKGROUND)
+
+        # Add prompt label
+        promptLabel = JLabel("System Prompt: ")
+        promptLabel.setForeground(DREADNODE_GREY)
+        prompt_panel.add(promptLabel)
+
+        # Add prompt selector
+        self.promptFiles = self.loadPromptFiles()
+        self.promptSelector = JComboBox(self.promptFiles)
+        self.promptSelector.setBackground(LIGHTER_BACKGROUND)
+        self.promptSelector.setForeground(DREADNODE_GREY)
+        self.promptSelector.addActionListener(self.loadPromptTemplate)
+        prompt_panel.add(self.promptSelector)
+
+        # Move reload button to prompt panel
+        self.reloadPromptButton = JButton("Reload Prompt")
+        self.reloadPromptButton.setBackground(DREADNODE_ORANGE)
+        self.reloadPromptButton.setForeground(DREADNODE_GREY)
+        self.reloadPromptButton.addActionListener(self.reloadPromptTemplate)
+        prompt_panel.add(self.reloadPromptButton)
+
+        inputPanel.add(prompt_panel, c)
 
         # stopButton
         c.gridy += 1
@@ -405,6 +440,19 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             if self.scanner:
                 self.scanner.config = None
                 self.scanner.api_adapter = None
+
+    def reloadPromptTemplate(self, event):
+        """Reloads the prompt template file"""
+        try:
+            if os.path.exists(PROXY_PROMPT):
+                with open(PROXY_PROMPT, 'r') as prompt_file:
+                    system_content = prompt_file.read().strip()
+                self._last_system_content = system_content
+                self.log_message("Prompt template reloaded successfully from " + PROXY_PROMPT)
+            else:
+                self.log_message("No prompt file found at " + PROXY_PROMPT)
+        except Exception as e:
+            self.log_message("Error reloading prompt template: %s" % str(e))
 
     def create_inference_logger_tab(self):
         panel = JPanel(BorderLayout())
@@ -1016,3 +1064,23 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             " tab and go brrr",
             "burpference Configuration Required",
             JOptionPane.INFORMATION_MESSAGE)
+
+    def loadPromptFiles(self):
+        """Load available prompt templates from prompts directory"""
+        if not os.path.exists(PROMPTS_DIR):
+            self.log_message("Prompts directory not found: " + PROMPTS_DIR)
+            return []
+        return [f for f in os.listdir(PROMPTS_DIR) if f.endswith('.txt')]
+
+    def loadPromptTemplate(self, event):
+        """Loads selected prompt template"""
+        selected_prompt = self.promptSelector.getSelectedItem()
+        if selected_prompt:
+            prompt_path = os.path.join(PROMPTS_DIR, selected_prompt)
+            try:
+                with open(prompt_path, 'r') as prompt_file:
+                    system_content = prompt_file.read().strip()
+                self._last_system_content = system_content
+                self.log_message("Loaded prompt template: " + selected_prompt)
+            except Exception as e:
+                self.log_message("Error loading prompt template: %s" % str(e))

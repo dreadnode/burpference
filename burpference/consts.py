@@ -7,7 +7,8 @@ ROOT_DIR = os.path.dirname(EXTENSION_DIR)  # Parent directory of burpference fol
 # Define paths relative to ROOT_DIR
 CONFIG_DIR = os.path.join(ROOT_DIR, "configs")
 LOG_DIR = os.path.join(ROOT_DIR, "logs")
-PROXY_PROMPT = os.path.join(ROOT_DIR, "prompts", "proxy_prompt.txt")
+PROMPTS_DIR = os.path.join(ROOT_DIR, "prompts")
+PROXY_PROMPT = os.path.join(PROMPTS_DIR, "proxy_prompt.txt")
 SQUID_ASCII_FILE = os.path.join(ROOT_DIR, "assets", "squid_ascii.txt")
 
 # Color constants
