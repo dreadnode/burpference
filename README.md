@@ -62,7 +62,13 @@ Some key features:
   - Additionally, burpference "findings" are created as issues in the Burp Scanner navigation bar available across all tabs in the Burp UI.
 - **Flexible Configuration**: Customize system prompts, API keys, or remote hosts as needed. Use your own configuration files for seamless integration with your workflow.
   - Supports custom configurations, allowing you to load and switch between system prompts, API keys, and remote hosts
-  - [Several examples](configs/README.md) are provided in the repository, and contributions for additional provider plugins are welcome.
+    - [Several examples](configs/README.md) are provided in the repository, and contributions for additional provider plugins are welcome.
+- **Flexible System Prompts**: Specialized [prompt](./prompts/) templates for focused API security testing with some examples:
+  - Authentication bypass and access control analysis
+  - Sensitive data exposure and PII leakage detection
+  - Injection vulnerability assessment across all vectors
+  - Additional templates can be created for specific testing scenarios
+    - Dynamic prompt switching during runtime to tailor analysis based on target endpoints
 
 So grab yer compass, hoist the mainsail, and let **burpference** be yer guide as ye plunder the seven seas of HTTP traffic! Yarrr'!
 
