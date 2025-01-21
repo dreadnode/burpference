@@ -62,7 +62,13 @@ Some key features:
   - Additionally, burpference "findings" are created as issues in the Burp Scanner navigation bar available across all tabs in the Burp UI.
 - **Flexible Configuration**: Customize system prompts, API keys, or remote hosts as needed. Use your own configuration files for seamless integration with your workflow.
   - Supports custom configurations, allowing you to load and switch between system prompts, API keys, and remote hosts
-  - [Several examples](configs/README.md) are provided in the repository, and contributions for additional provider plugins are welcome.
+    - [Several examples](configs/README.md) are provided in the repository, and contributions for additional provider plugins are welcome.
+- **Flexible System Prompts**: Specialized [prompt](./prompts/) templates for focused API security testing with some examples:
+  - Authentication bypass and access control analysis
+  - Sensitive data exposure and PII leakage detection
+  - Injection vulnerability assessment across all vectors
+  - Additional templates can be created for specific testing scenarios
+    - Dynamic prompt switching during runtime to tailor analysis based on target endpoints
 
 So grab yer compass, hoist the mainsail, and let **burpference** be yer guide as ye plunder the seven seas of HTTP traffic! Yarrr'!
 
@@ -156,8 +162,6 @@ Longer-term roadmap is a potential Kotlin-based successor (mainly due to the lim
 
 The below bullets are cool ideas for the repo at a further stage or still actively developing.
 
-- **Scanner**
-  - An additional custom one-click "scanner" tab which scans an API target/schema with a selected model and reports findings/payloads and PoCs.
 - **Conversations**
   - Enhanced conversation turns with the model to reflect turns for both HTTP requests and responses to build context.
 - **Prompt Tuning**:
@@ -168,8 +172,6 @@ The below bullets are cool ideas for the repo at a further stage or still active
 - **Optimization**:
   - Extend functionality of selecting multiple configurations and sending results across multiple endpoints for optimal results.
   - Introduce judge reward systems for findings.
-
-The following known issues are something that have been reported so far and marked against issues in the repo.
 
 ---
 
