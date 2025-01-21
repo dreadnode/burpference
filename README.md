@@ -162,8 +162,6 @@ Longer-term roadmap is a potential Kotlin-based successor (mainly due to the lim
 
 The below bullets are cool ideas for the repo at a further stage or still actively developing.
 
-- **Scanner**
-  - An additional custom one-click "scanner" tab which scans an API target/schema with a selected model and reports findings/payloads and PoCs.
 - **Conversations**
   - Enhanced conversation turns with the model to reflect turns for both HTTP requests and responses to build context.
 - **Prompt Tuning**:
@@ -174,8 +172,6 @@ The below bullets are cool ideas for the repo at a further stage or still active
 - **Optimization**:
   - Extend functionality of selecting multiple configurations and sending results across multiple endpoints for optimal results.
   - Introduce judge reward systems for findings.
-
-The following known issues are something that have been reported so far and marked against issues in the repo.
 
 ---
 
