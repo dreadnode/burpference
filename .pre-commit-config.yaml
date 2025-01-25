@@ -26,7 +26,15 @@ repos:
     hooks:
       - id: bandit
         name: Code security checks
-        args: ["-r", "--level", "2", "./", --exclude, "rigging_pr_decorator.py"]
+        args:
+          [
+            "-r",
+            "--level",
+            "2",
+            "./",
+            --exclude,
+            ".github/scripts/rigging_pr_decorator.py",
+          ]
 
   - repo: local
     hooks:
