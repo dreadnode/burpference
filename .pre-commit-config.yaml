@@ -35,3 +35,4 @@ repos:
         entry: python .scripts/check_pinned_hash_dependencies.py
         language: python
         files: \.github/.*\.yml$
+        exclude: ^\.github/workflows/.*\.yml$
