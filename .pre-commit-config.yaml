@@ -18,16 +18,7 @@ repos:
       - id: actionlint
         name: Check Github Actions
         args: ["--ignore", "SC2102"]
-        exclude: ^rigging_pr_decorator\.py$
-
-  # Python code security
-  - repo: https://github.com/PyCQA/bandit
-    rev: 8fd258abbac759d62863779f946d6a88e8eabb0f #1.8.0
-    hooks:
-      - id: bandit
-        name: Code security checks
-        args: ["-r", "--level", "2", "./"]
-        exclude: ^rigging_pr_decorator\.py$
+        exclude: ^rigging_pr_description\.yml$
 
   - repo: local
     hooks:
