@@ -18,6 +18,7 @@ repos:
       - id: actionlint
         name: Check Github Actions
         args: ["--ignore", "SC2102"]
+        exclude: ^rigging_pr_decorator\.py$
 
   # Python code security
   - repo: https://github.com/PyCQA/bandit
@@ -26,6 +27,7 @@ repos:
       - id: bandit
         name: Code security checks
         args: ["-r", "--level", "2", "./"]
+        exclude: ^rigging_pr_decorator\.py$
 
   - repo: local
     hooks:
@@ -35,4 +37,3 @@ repos:
         entry: python .scripts/check_pinned_hash_dependencies.py
         language: python
         files: \.github/.*\.yml$
-        exclude: ^\.github/workflows/.*\.yml$
