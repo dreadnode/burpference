@@ -17,7 +17,7 @@ repos:
     hooks:
       - id: actionlint
         name: Check Github Actions
-        args: ["--ignore", "SC2102", "SC2129", "SC2086"]
+        args: ["--ignore", "SC2102,SC2129,SC2086"]
         exclude: ^rigging_pr_description\.yml$
 
   # Python code security
