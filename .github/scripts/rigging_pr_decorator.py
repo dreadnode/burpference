@@ -1,142 +1,120 @@
+#!/usr/bin/env python
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "rigging",
+#     "typer",
+# ]
+# ///
 import asyncio
-import base64
 import os
 import typing as t
 
-from pydantic import ConfigDict, StringConstraints
-
 import rigging as rg
-from rigging import logger
-from rigging.generator import GenerateParams, Generator, register_generator
+import typer
 
-logger.enable("rigging")
-
-MAX_TOKENS = 8000
-TRUNCATION_WARNING = "\n\n**Note**: Due to the large size of this diff, some content has been truncated."
-str_strip = t.Annotated[str, StringConstraints(strip_whitespace=True)]
+TRUNCATION_WARNING = "\n---\n**Note**: Due to the large size of this diff, some content has been truncated."
 
 
-class PRDiffData(rg.Model):
-    """XML model for PR diff data"""
-
-    content: str_strip = rg.element()
-
-    @classmethod
-    def xml_example(cls) -> str:
-        return """<diff><content>example diff content</content></diff>"""
-
-
-class PRDecorator(Generator):
-    """Generator for creating PR descriptions"""
-
-    model_config = ConfigDict(arbitrary_types_allowed=True, validate_assignment=True)
-
-    api_key: str = ""
-    max_tokens: int = MAX_TOKENS
-
-    def __init__(self, model: str, params: rg.GenerateParams) -> None:
-        api_key = params.extra.get("api_key")
-        if not api_key:
-            raise ValueError("api_key is required in params.extra")
-
-        super().__init__(model=model, params=params, api_key=api_key)
-        self.api_key = api_key
-        self.max_tokens = params.max_tokens or MAX_TOKENS
-
-    async def generate_messages(
-        self,
-        messages: t.Sequence[t.Sequence[rg.Message]],
-        params: t.Sequence[GenerateParams],
-    ) -> t.Sequence[rg.GeneratedMessage]:
-        responses = []
-        for message_seq, p in zip(messages, params):
-            base_generator = rg.get_generator(self.model, params=p)
-            llm_response = await base_generator.generate_messages([message_seq], [p])
-            responses.extend(llm_response)
-        return responses
+@rg.prompt
+def generate_pr_description(diff: str) -> t.Annotated[str, rg.Ctx("markdown")]:  # type: ignore[empty-body]
+    """
+    Analyze the provided git diff and create a PR description in markdown format.
+    <guidance>
+    - Keep the summary concise and informative.
+    - Use bullet points to structure important statements.
+    - Focus on key modifications and potential impact - if any.
+    - Do not add in general advice or best-practice information.
+    - Write like a developer who authored the changes.
+    - Prefer flat bullet lists over nested.
+    - Do not include any title structure.
+    - If there are no changes, just provide "No relevant changes."
+    - Order your bullet points by importance.
+    </guidance>
+    """
 
 
-register_generator("pr_decorator", PRDecorator)
+async def _run_git_command(args: list[str]) -> str:
+    """
+    Safely run a git command with validated input.
+    """
+    # Validate git exists in PATH
+    git_path = "git"  # Could use shutil.which("git") for more security
+    if not any(
+        os.path.isfile(os.path.join(path, "git"))
+        for path in os.environ["PATH"].split(os.pathsep)
+    ):
+        raise ValueError("Git executable not found in PATH")
 
+    # Validate input parameters
+    if not all(isinstance(arg, str) for arg in args):
+        raise ValueError("All command arguments must be strings")
 
-async def generate_pr_description(diff_text: str) -> str:
-    """Generate a PR description from the diff text"""
-    diff_tokens = len(diff_text) // 4
-    if diff_tokens >= MAX_TOKENS:
-        char_limit = (MAX_TOKENS * 4) - len(TRUNCATION_WARNING)
-        diff_text = diff_text[:char_limit] + TRUNCATION_WARNING
-
-    diff_data = PRDiffData(content=diff_text)
-    params = rg.GenerateParams(
-        extra={
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "diff_text": diff_text,
-        },
-        temperature=0.1,
-        max_tokens=500,
-    )
-
-    generator = rg.get_generator("pr_decorator!gpt-4-turbo-preview", params=params)
-    prompt = f"""You are a helpful AI that generates clear and concise PR descriptions with some pirate tongue.
-    Analyze the provided git diff and create a summary, specifically focusing on the elements of the code that
-    has changed, high severity functions etc using exactly this format:
-
-    ### PR Summary
-
-    #### Overview of Changes
-    <overview paragraph>
-
-    #### Key Modifications
-    1. **<modification title>**: <description>
-    (continue as needed)
-
-    #### Potential Impact
-    - <impact point 1>
-    (continue as needed)
-
-    Here is the PR diff to analyze:
-    {diff_data.to_xml()}"""
-
-    chat = await generator.chat(prompt).run()
-    return chat.last.content.strip()
-
-
-async def main():
-    """Main function for CI environment"""
-    if not os.environ.get("OPENAI_API_KEY"):
-        raise ValueError("OPENAI_API_KEY environment variable must be set")
-
+    # Use os.execv for more secure command execution
     try:
-        diff_text = os.environ.get("GIT_DIFF", "")
-        if not diff_text:
-            raise ValueError("No diff found in GIT_DIFF environment variable")
+        # nosec B603 - Input is validated
+        proc = await asyncio.create_subprocess_exec(
+            git_path,
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
 
-        try:
-            diff_text = base64.b64decode(diff_text).decode("utf-8")
-        except Exception:
-            padding = 4 - (len(diff_text) % 4)
-            if padding != 4:
-                diff_text += "=" * padding
-            diff_text = base64.b64decode(diff_text).decode("utf-8")
+        if proc.returncode != 0:
+            raise RuntimeError(f"Git command failed: {stderr.decode()}")
 
-        logger.debug(f"Processing diff of length: {len(diff_text)}")
-        description = await generate_pr_description(diff_text)
-
-        with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-            f.write("content<<EOF\n")
-            f.write(description)
-            f.write("\nEOF\n")
-            f.write(f"debug_diff_length={len(diff_text)}\n")
-            f.write(f"debug_description_length={len(description)}\n")
-            debug_preview = description[:500]
-            f.write("debug_preview<<EOF\n")
-            f.write(debug_preview)
-            f.write("\nEOF\n")
-
+        return stdout.decode().strip()
     except Exception as e:
-        logger.error(f"Error in main: {e}")
-        raise
+        raise RuntimeError(f"Failed to execute git command: {e}")
+
+
+async def get_diff(
+    base_ref: str, source_ref: str, *, exclude: list[str] | None = None
+) -> str:
+    """
+    Get the git diff between two branches.
+    """
+    # Validate refs
+    for ref in (base_ref, source_ref):
+        if not isinstance(ref, str) or not ref.strip():
+            raise ValueError("Invalid git reference")
+
+    # Get merge base
+    merge_base = await _run_git_command(["merge-base", source_ref, base_ref])
+
+    # Prepare diff command
+    diff_command = ["diff", "--no-color", merge_base, source_ref]
+    if exclude:
+        validated_excludes = []
+        for path in exclude:
+            # Validate path
+            if not isinstance(path, str) or ".." in path:
+                raise ValueError(f"Invalid exclude path: {path}")
+            validated_excludes.append(f":(exclude){path}")
+        diff_command.extend(["--", ".", *validated_excludes])
+
+    # Get diff
+    return await _run_git_command(diff_command)
+
+
+def main(
+    base_ref: str = "origin/main",
+    source_ref: str = "HEAD",
+    generator_id: str = "openai/gpt-4o-mini",
+    max_diff_lines: int = 1000,
+    exclude: list[str] | None = None,
+) -> None:
+    """
+    Use rigging to generate a PR description from a git diff.
+    """
+    diff = asyncio.run(get_diff(base_ref, source_ref, exclude=exclude))
+    diff_lines = diff.split("\n")
+    if len(diff_lines) > max_diff_lines:
+        diff = "\n".join(diff_lines[:max_diff_lines]) + TRUNCATION_WARNING
+    description = asyncio.run(generate_pr_description.bind(generator_id)(diff))
+    print(description)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    typer.run(main)
