@@ -1,4 +1,5 @@
 from burp import IScanIssue
+import json
 
 
 class BurpferenceIssue(IScanIssue):
@@ -45,3 +46,23 @@ class BurpferenceIssue(IScanIssue):
 
     def getHttpService(self):
         return self._httpService
+
+    def to_dict(self):
+        """Convert issue to dictionary for database storage"""
+        return {
+            "name": self._name,
+            "detail": self._detail,
+            "severity": self._severity,
+            "confidence": self._confidence,
+            "host": self._httpService.getHost(),
+            "url": str(self._url),
+            "request_response": json.dumps(
+                [
+                    {
+                        "request": msg.getRequest().tostring(),
+                        "response": msg.getResponse().tostring(),
+                    }
+                    for msg in self._httpMessages
+                ]
+            ),
+        }

@@ -23,6 +23,7 @@ Experimenting with yarrr' Burp Proxy tab going brrrrrrrrrrrrr.
 
 - [burpference](#burpference)
   - [Prerequisites](#prerequisites)
+  - [Project Structure](#project-structure)
   - [Setup Guide](#setup-guide)
     - [1. Download and Install Burp Suite](#1-download-and-install-burp-suite)
     - [2. Download and import Jython standalone JAR file](#2-download-and-import-jython-standalone-jar-file)
@@ -69,7 +70,25 @@ Some key features:
   - Injection vulnerability assessment across all vectors
   - Additional templates can be created for specific testing scenarios
     - Dynamic prompt switching during runtime to tailor analysis based on target endpoints
+- **Persistent Findings Storage**: All security findings are automatically stored and tracked:
+  - Findings are saved to `logs/findings.json` in a structured format (example below)
+  - Each finding includes timestamp, severity, details, and affected URLs and persist across Burp Suite sessions
+  - Findings are synchronized between Scanner and Proxy analysis
 
+  ```json
+  [
+    {
+      "detail": "{u'<FINDING>'model': u'<provider>/<model>'}",
+      "host": "www.evil.io",
+      "name": "burpference: <SEVERITY> Security Finding",
+      "severity": "<SEVERITY>",
+      "timestamp": "2025-02-09T19:35:56.667000",
+      "url": "https://www.evil.io:443/"
+    }
+  ]
+  ```
+
+<br>
 So grab yer compass, hoist the mainsail, and let **burpference** be yer guide as ye plunder the seven seas of HTTP traffic! Yarrr'!
 
 ---
@@ -97,6 +116,32 @@ Before using **Burpference**, ensure you have the following:
       1. There's a template config [here](configs/README.md#ollama-gguf) for you to clone and add your own models.
 
 ---
+
+## Project Structure
+```
+/Users/ads/git/burpference/
+├── burpference/                 # Main package directory
+│   ├── __init__.py             # Package initialization
+│   ├── api_adapters.py         # API providers and adapters
+│   ├── assets/                 # Internal assets
+│   │   └── squid_ascii.txt     # ASCII art for extension
+│   ├── burpference.py          # Main extension code
+│   ├── consts.py              # Constants and configurations
+│   ├── db_manager.py          # Database operations
+│   ├── issues.py              # Burp issue implementations
+│   └── scanner.py             # Security scanner functionality
+├── configs/                    # API configuration files
+│   └── *.json                 # JSON config files per provider
+├── logs/                      # Log output directory
+│   ├── findings.json          # Security findings database
+│   └── *.txt                  # Generated log files
+├── prompts/                   # Prompt template files
+│   ├── proxy_prompt.txt       # Default proxy analysis prompt
+│   ├── scanner_prompt.txt     # Scanner analysis prompt
+│   └── openapi_prompt.txt     # OpenAPI analysis prompt
+├── LICENSE                    # Project license
+└── README.md                 # Project documentation
+```
 
 ## Setup Guide
 

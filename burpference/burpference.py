@@ -17,6 +17,7 @@ import os
 from consts import *
 from api_adapters import get_api_adapter
 from issues import BurpferenceIssue
+from db_manager import BurpDBManager
 from threading import Thread
 from scanner import BurpferenceScanner
 
@@ -56,6 +57,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
         self.log_message("Extension initialized and running.")
         self._hosts = set()
         self.scanner = None  # Will initialize after callbacks
+        self.db_manager = BurpDBManager()
 
     def registerExtenderCallbacks(self, callbacks):
         self._callbacks = callbacks
@@ -838,7 +840,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             severity = self.extract_severity_from_response(processed_response)
             burp_severity = self.map_severity(severity)
 
-            # Convert response to string and handle escaping
             if isinstance(processed_response, str):
                 detail = processed_response
             else:
@@ -847,7 +848,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
             if detail.startswith('"') and detail.endswith('"'):
                 detail = detail[1:-1]
 
-            # Create properly formatted issue name
             issue_name = "burpference: %s Security Finding" % severity
 
             issue = BurpferenceIssue(
@@ -859,6 +859,17 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener):
                 severity=burp_severity,
                 confidence="Certain"
             )
+
+            finding_dict = {
+                "timestamp": datetime.now().isoformat(),
+                "name": issue_name,
+                "severity": burp_severity,
+                "detail": detail,
+                "url": str(issue.getUrl()),
+                "host": messageInfo.getHttpService().getHost()
+            }
+            self.db_manager.add_finding(finding_dict)
+            self.log_message("Saved finding to database")
 
             self._callbacks.addScanIssue(issue)
             self.log_message("Added %s issue to Burp Scanner" % severity)

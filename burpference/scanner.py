@@ -20,6 +20,8 @@ import urllib2
 import re
 from datetime import datetime
 from javax.swing.border import EmptyBorder
+from db_manager import BurpDBManager
+from issues import BurpferenceIssue
 
 SCANNER_PROMPT = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "prompts", "scanner_prompt.txt"
@@ -44,6 +46,7 @@ class BurpferenceScanner:
         self.LIGHTER_BACKGROUND = self.colors.get("LIGHTER_BACKGROUND")
         self.DREADNODE_GREY = self.colors.get("DREADNODE_GREY")
         self.DREADNODE_ORANGE = self.colors.get("DREADNODE_ORANGE")
+        self.db_manager = BurpDBManager()
 
     def add_host(self, host):
         """Add a host to the scanner's tracked hosts"""
@@ -503,3 +506,24 @@ class BurpferenceScanner:
         if hasattr(self, "config_label"):
             self.config_label.setText(self.get_config_status())
             self.refresh_prompt_template()
+
+    def create_scan_issue(self, messageInfo, processed_response):
+        try:
+            issue = BurpferenceIssue(
+                httpService=self._helpers.buildHttpService(
+                    host, port, protocol == "https"
+                ),
+                url=url,
+                httpMessages=[messageInfo],
+                name="burpference Scanner: %s Finding" % level,
+                detail=analysis,
+                severity=severity,
+                confidence="Certain",
+            )
+
+            self.db_manager.add_finding(issue.to_dict())
+
+            self._callbacks.addScanIssue(issue)
+
+        except Exception as e:
+            self._callbacks.printOutput("Error creating scan issue: %s" % str(e))

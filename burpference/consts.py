@@ -1,15 +1,16 @@
 import os
 from java.awt import Color
 
-# Get the directory containing burpference.py
-EXTENSION_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(EXTENSION_DIR)  # Parent directory of burpference folder
-# Define paths relative to ROOT_DIR
-CONFIG_DIR = os.path.join(ROOT_DIR, "configs")
-LOG_DIR = os.path.join(ROOT_DIR, "logs")
-PROMPTS_DIR = os.path.join(ROOT_DIR, "prompts")
+BURPFERENCE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)  # /path/to/burpference/burpference
+PROJECT_ROOT = os.path.dirname(BURPFERENCE_DIR)  # /path/to/burpference
+
+CONFIG_DIR = os.path.join(PROJECT_ROOT, "configs")  # /path/to/burpference/configs
+LOG_DIR = os.path.join(PROJECT_ROOT, "logs")  # /path/to/burpference/logs
+PROMPTS_DIR = os.path.join(PROJECT_ROOT, "prompts")  # /path/to/burpference/prompts
 PROXY_PROMPT = os.path.join(PROMPTS_DIR, "proxy_prompt.txt")
-SQUID_ASCII_FILE = os.path.join(ROOT_DIR, "assets", "squid_ascii.txt")
+SQUID_ASCII_FILE = os.path.join(BURPFERENCE_DIR, "assets", "squid_ascii.txt")
 
 # Color constants
 DREADNODE_ORANGE = Color(255, 140, 0)
