@@ -13,8 +13,12 @@ If you intend to fork or contribute to burpference, ensure that you have exclude
     - [Example Ollama `/generate`/`/chat` inference model:](#example-ollama-generatechat-inference-model)
   - [Anthropic Inference](#anthropic-inference)
     - [Example Anthropic `/messages` inference with `claude-3-5-sonnet-20241022`:](#example-anthropic-messages-inference-with-claude-3-5-sonnet-20241022)
+    - [Example Anthropic `/messages` inference with `claude-opus-4-20250514`:](#example-anthropic-messages-inference-with-claude-opus-4-20250514)
   - [OpenAI Inference](#openai-inference)
     - [Example OpenAI `/completions` inference with `gpt-4o-mini`:](#example-openai-completions-inference-with-gpt-4o-mini)
+  - [Google Gemini Inference](#google-gemini-inference)
+    - [Example Gemini 1.5 Flash inference](#example-gemini-15-flash-inference)
+    - [Example Gemini 1.5 Pro inference](#example-gemini-15-pro-inference)
   - [HuggingFace Serveless Inference](#huggingface-serveless-inference)
     - [Example HuggingFace `/text-generation` inference](#example-huggingface-text-generation-inference)
   - [Cohere `/v2/chat` Inference](#cohere-v2chat-inference)
@@ -80,6 +84,22 @@ In order to serve inference as part of burpference, the model must be running on
 }
 ```
 
+#### Example Anthropic `/messages` inference with `claude-opus-4-20250514`:
+
+```json
+{
+  "api_type": "anthropic",
+  "headers": {
+    "x-api-key": "{$ANTHROPIC_API_KEY}", <-- replace with your API key in the local config file
+    "Content-Type": "application/json",
+    "anthropic-version": "2023-06-01"
+  },
+  "max_tokens": 4096, <-- adjust based on your required usage
+  "host": "https://api.anthropic.com/v1/messages",
+  "model": "claude-opus-4-20250514" <-- adjust based on your required usage
+}
+```
+
 ---
 
 ### OpenAI Inference
@@ -99,6 +119,88 @@ In order to serve inference as part of burpference, the model must be running on
   "temperature": 0.1 <-- adjust based on your required usage
 }
 ```
+
+---
+
+### Google Gemini Inference
+
+#### Example Gemini 1.5 Flash inference
+
+```json
+{
+  "api_type": "gemini",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "host": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+  "api_key": "{$GOOGLE_API_KEY}", <-- replace with your API key in the local config file
+  "model": "gemini-1.5-flash",
+  "generation_config": {
+    "temperature": 0.2,
+    "top_p": 0.95,
+    "top_k": 40,
+    "max_output_tokens": 8192
+  },
+  "safety_settings": [
+    {
+      "category": "HARM_CATEGORY_HARASSMENT",
+      "threshold": "BLOCK_NONE"
+    },
+    {
+      "category": "HARM_CATEGORY_HATE_SPEECH",
+      "threshold": "BLOCK_NONE"
+    },
+    {
+      "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+      "threshold": "BLOCK_NONE"
+    },
+    {
+      "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+      "threshold": "BLOCK_NONE"
+    }
+  ]
+}
+```
+
+#### Example Gemini 1.5 Pro inference
+
+```json
+{
+  "api_type": "gemini",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "host": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+  "api_key": "{$GOOGLE_API_KEY}", <-- replace with your API key in the local config file
+  "model": "gemini-1.5-pro",
+  "generation_config": {
+    "temperature": 0.1,
+    "top_p": 0.95,
+    "top_k": 40,
+    "max_output_tokens": 8192
+  },
+  "safety_settings": [
+    {
+      "category": "HARM_CATEGORY_HARASSMENT",
+      "threshold": "BLOCK_NONE"
+    },
+    {
+      "category": "HARM_CATEGORY_HATE_SPEECH",
+      "threshold": "BLOCK_NONE"
+    },
+    {
+      "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+      "threshold": "BLOCK_NONE"
+    },
+    {
+      "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+      "threshold": "BLOCK_NONE"
+    }
+  ]
+}
+```
+
+---
 
 ### HuggingFace Serveless Inference
 
